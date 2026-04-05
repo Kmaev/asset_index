@@ -4,6 +4,7 @@ import math
 import subprocess
 import tempfile
 from collections import defaultdict
+from collections.abc import Iterator
 from pathlib import Path
 
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
@@ -11,10 +12,16 @@ from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 from asset_index import import_utils
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(encoding='utf-8', level=logging.INFO, force=True)
+logging.basicConfig(level=logging.INFO, force=True)
 
 
 class BaseKitImporter:
+    """
+    Base class for importing KitBash asset libraries into a production pipeline.
+    For each USD asset, creates a temporary render file, computes the asset’s bounding box, and uses it to set up and position a render camera. Adds a basic light rig and generates a thumbnail using usdrecord with the Storm renderer.
+    Updates the global library metadata file with the library key and asset paths
+    """
+
     def __init__(self, library_path: str):
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
         self.global_asset_catalog = self.global_asset_lib / "library_catalog.json"
@@ -23,7 +30,10 @@ class BaseKitImporter:
         self.models_folder = self.library_path / "Models"
         self.added_new_assets = False
 
-    def import_library(self):
+    def import_library(self) -> None:
+        """
+        Run the full import: build the library catalog, render thumbnails, and update global metadata.
+        """
         library_catalog = self.create_library_catalog()
         assets = library_catalog[self.library_path]
         self.render_thumbnails(assets)
@@ -31,6 +41,9 @@ class BaseKitImporter:
             self.update_global_library_index(library_catalog)
 
     def create_library_catalog(self) -> dict[Path:list[Path]]:
+        """
+        Map library path to a list of USD asset files.
+        """
         library_catalog = defaultdict(list)
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
@@ -40,22 +53,32 @@ class BaseKitImporter:
                             library_catalog[self.library_path].append(file)
         return library_catalog
 
-    def render_thumbnails(self, assets):
+    def render_thumbnails(self, assets: list[Path]) -> None:
+        """
+        Render thumbnails for USD assets by creating a temporary stage and calling the renderer.
+        """
         for asset_path in self.iterate_with_progress_bar(assets):
-            thumbnail_file = self.get_thumbnail_output_path(asset_path)
+            thumbnail_file = self.get_thumbnail_output_path(asset_path, "png")
             if Path(thumbnail_file).exists():
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
                 continue
             self.added_new_assets = True
             temp_usd_file = self.create_temp_usd_render_stage(asset_path)
-            self.render_usd_stage(temp_usd_file, str(thumbnail_file))
+            self.render_usd_stage(str(temp_usd_file), str(thumbnail_file))
 
-    def iterate_with_progress_bar(self, assets):
+    def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
+        """
+        Iterate over assets while reporting render progress.
+        Default implementation logs progress; may be overridden for DCC-specific behavior.
+        """
         for asset in assets:
             logging.info(f"Generating thumbnail: {asset}")
             yield asset
 
-    def update_global_library_index(self, library_catalog):
+    def update_global_library_index(self, library_catalog: dict[Path:list[Path]]):
+        """
+        Sync a library catalog into the global metadata file.
+        """
         if self.global_asset_catalog.exists():
             with open(self.global_asset_catalog, "r") as f:
                 library_data = json.load(f)
@@ -76,19 +99,26 @@ class BaseKitImporter:
             json.dump(library_data, f, indent=4, default=str)
 
     @staticmethod
-    def get_thumbnail_output_path(usd_file_path) -> Path:
-        return usd_file_path.with_suffix(".png")
+    def get_thumbnail_output_path(usd_file_path: Path, ext: str) -> Path:
+        """
+        Generate the thumbnail path by replacing the USD file extension with the specified extension.
+        """
+        return usd_file_path.with_suffix(f".{ext}")
 
-    def create_temp_usd_render_stage(self, usd_file_path) -> str:
+    def create_temp_usd_render_stage(self, usd_file_path: Path) -> Path:
+        """
+        Create a temporary USD stage, reference the asset at the "/main" prim,
+        attach a light rig and camera, and save for rendering.
+        """
         asset_name = usd_file_path.stem
         asset_prim_path = Sdf.Path(f"/main/{asset_name}")
 
         tmp_dir_usd = Path(tempfile.gettempdir())
-        temp_usd_stage_file = str(tmp_dir_usd / f"{asset_name}.usda")
+        temp_usd_stage_file = tmp_dir_usd / f"{asset_name}.usda"
 
-        stage = Usd.Stage.CreateNew(temp_usd_stage_file)
+        stage = Usd.Stage.CreateNew(str(temp_usd_stage_file))
 
-        self.reference_library_asset(usd_file_path, stage, asset_prim_path)
+        self.reference_library_asset(str(usd_file_path), stage, asset_prim_path)
         self.add_light_rig(stage)
         self.add_render_camera(stage)
 
@@ -96,19 +126,29 @@ class BaseKitImporter:
         return temp_usd_stage_file
 
     @staticmethod
-    def reference_library_asset(usd_file_path, stage, asset_prim_path):
+    def reference_library_asset(usd_file_path: str, stage: Usd.Stage, asset_prim_path: Sdf.Path):
+        """
+        Reference the asset at the specified prim path.
+        """
         parent_prim = stage.DefinePrim(asset_prim_path)
         stage.SetDefaultPrim(parent_prim)
         references = parent_prim.GetReferences()
-        references.AddReference(str(usd_file_path))
+        references.AddReference(usd_file_path)
 
     @staticmethod
-    def add_light_rig(stage):
+    def add_light_rig(stage: Usd.Stage):
+        """
+        Add a basic light rig with a Dome Light.
+        """
         dome = UsdLux.DomeLight.Define(stage, "/DomeLight")
         dome.CreateIntensityAttr(1.0)
 
     @staticmethod
-    def add_render_camera(stage):
+    def add_render_camera(stage: Usd.Stage):
+        """
+        Compute asset's bounding box and based on size calculate render camera position and rotation.
+        Set up camera parameters.
+        """
         camera = UsdGeom.Camera.Define(stage, "/Camera")
 
         prim = stage.GetPrimAtPath("/main")
@@ -159,7 +199,10 @@ class BaseKitImporter:
         stage.Save()
 
     @staticmethod
-    def render_usd_stage(usd_file, output_img_path, remove_usd_file=True):
+    def render_usd_stage(usd_file: str, output_img_path: str, remove_usd_file: bool = True):
+        """
+        Execute render using usdrecord and the Storm renderer. Remove the temporary USD file.
+        """
         cmd = [
             "usdrecord",
             usd_file,
