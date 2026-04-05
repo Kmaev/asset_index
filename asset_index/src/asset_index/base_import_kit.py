@@ -28,10 +28,9 @@ class BaseKitImporter:
         assets = library_catalog[self.library_path]
         self.render_thumbnails(assets)
         if self.added_new_assets:
-            print("JSON Asset Update triggered")
             self.update_global_library_index(library_catalog)
 
-    def create_library_catalog(self):
+    def create_library_catalog(self) -> dict[Path:list[Path]]:
         library_catalog = defaultdict(list)
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
@@ -49,7 +48,7 @@ class BaseKitImporter:
                 continue
             self.added_new_assets = True
             temp_usd_file = self.create_temp_usd_render_stage(asset_path)
-            self.render_usd_stage(temp_usd_file, thumbnail_file)
+            self.render_usd_stage(temp_usd_file, str(thumbnail_file))
 
     def iterate_with_progress_bar(self, assets):
         for asset in assets:
@@ -77,15 +76,15 @@ class BaseKitImporter:
             json.dump(library_data, f, indent=4, default=str)
 
     @staticmethod
-    def get_thumbnail_output_path(usd_file_path):
+    def get_thumbnail_output_path(usd_file_path) -> Path:
         return usd_file_path.with_suffix(".png")
 
-    def create_temp_usd_render_stage(self, usd_file_path):
+    def create_temp_usd_render_stage(self, usd_file_path) -> str:
         asset_name = usd_file_path.stem
         asset_prim_path = Sdf.Path(f"/main/{asset_name}")
 
-        tmp_dir_usd = tempfile.gettempdir()
-        temp_usd_stage_file = f"{tmp_dir_usd}/{asset_name}.usda"
+        tmp_dir_usd = Path(tempfile.gettempdir())
+        temp_usd_stage_file = str(tmp_dir_usd / f"{asset_name}.usda")
 
         stage = Usd.Stage.CreateNew(temp_usd_stage_file)
 
@@ -163,7 +162,7 @@ class BaseKitImporter:
     def render_usd_stage(usd_file, output_img_path, remove_usd_file=True):
         cmd = [
             "usdrecord",
-            str(usd_file),
+            usd_file,
             output_img_path,
             "--renderer", "Storm",
             "--camera", "/Camera"
