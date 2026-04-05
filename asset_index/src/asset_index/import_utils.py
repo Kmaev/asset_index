@@ -4,6 +4,10 @@ from typing import Any
 
 
 class ImportUtils:
+    """
+    Static utilities for asset import workflows.
+    """
+
     @staticmethod
     def get_env_var(env_var: str) -> str:
         try:
