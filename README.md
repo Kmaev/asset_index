@@ -5,13 +5,11 @@ The goal of this project is to create a tool that works across multiple DCC appl
 One of the core features—currently merged into the main branch—is an asset check-in process for a production pipeline. As an example, the project uses a KitBash library.
 
 The check-in process includes:
-
-Creating a library metadata catalog
-Generating a temporary USD stage for each asset
-Adding a light rig
-Calculating the bounding box of the asset’s geometry
-Computing camera position and rotation for thumbnail rendering
-Rendering thumbnails
+- Creating a library metadata catalog
+- Generating a temporary USD stage for each asset
+- Adding a light rig
+- Computing the camera position and rotation for thumbnail rendering based on the calculated bounding box of the asset’s geometry
+- Rendering thumbnails
 
 This process prepares assets for ingestion into the asset browser and production pipeline.
 
