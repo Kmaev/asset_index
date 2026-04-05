@@ -12,7 +12,7 @@ from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 from asset_index import import_utils
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, force=True)
+logger.setLevel(logging.INFO)
 
 
 class BaseKitImporter:
@@ -40,7 +40,7 @@ class BaseKitImporter:
         if self.added_new_assets:
             self.update_global_library_index(library_catalog)
 
-    def create_library_catalog(self) -> dict[Path:list[Path]]:
+    def create_library_catalog(self) -> dict[Path, list[Path]]:
         """
         Map library path to a list of USD asset files.
         """
@@ -62,9 +62,9 @@ class BaseKitImporter:
             if Path(thumbnail_file).exists():
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
                 continue
-            self.added_new_assets = True
             temp_usd_file = self.create_temp_usd_render_stage(asset_path)
             self.render_usd_stage(str(temp_usd_file), str(thumbnail_file))
+            self.added_new_assets = True
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
         """
@@ -75,7 +75,7 @@ class BaseKitImporter:
             logging.info(f"Generating thumbnail: {asset}")
             yield asset
 
-    def update_global_library_index(self, library_catalog: dict[Path:list[Path]]):
+    def update_global_library_index(self, library_catalog: dict[Path, list[Path]]):
         """
         Sync a library catalog into the global metadata file.
         """
@@ -91,9 +91,9 @@ class BaseKitImporter:
             if key in library_data:
                 _library_data_set = set(library_data[key])
                 _library_data_set.update(val)
-                library_data[key] = list(_library_data_set)
+                library_data[key] = sorted(list(_library_data_set))
             else:
-                library_data[key] = val
+                library_data[key] = sorted(val)
 
         with open(self.global_asset_catalog, "w") as f:
             json.dump(library_data, f, indent=4, default=str)
@@ -196,7 +196,6 @@ class BaseKitImporter:
         camera.CreateFocalLengthAttr().Set(focal_length)
         camera.CreateHorizontalApertureAttr().Set(sensor_width)
         camera.CreateVerticalApertureAttr().Set(sensor_width)
-        stage.Save()
 
     @staticmethod
     def render_usd_stage(usd_file: str, output_img_path: str, remove_usd_file: bool = True):
@@ -210,7 +209,9 @@ class BaseKitImporter:
             "--renderer", "Storm",
             "--camera", "/Camera"
         ]
-        subprocess.run(cmd, check=True)
+        try:
+            subprocess.run(cmd, check=True)
+        finally:
+            if remove_usd_file:
+                Path(usd_file).unlink(missing_ok=True)
 
-        if remove_usd_file:
-            Path(usd_file).unlink()

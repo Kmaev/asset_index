@@ -10,5 +10,4 @@ def commands():
 
     env.PYTHONPATH.append("{root}/python")
 
-    alias("asset_index", "python -m asset_index.ui.main_window")
 

@@ -18,5 +18,5 @@ class HoudiniKitImporter(base_import_kit.BaseKitImporter):
         total = len(assets)
         with hou.InterruptableOperation("Generating thumbnails", open_interrupt_dialog=True) as op:
             for i, asset in enumerate(assets):
-                op.updateLongProgress(i / total)
+                op.updateLongProgress(i + 1 / total)
                 yield asset

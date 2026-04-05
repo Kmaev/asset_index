@@ -12,8 +12,8 @@ class ImportUtils:
     def get_env_var(env_var: str) -> str:
         try:
             return os.environ[env_var]
-        except:
-            raise EnvironmentError(f"Environment variable: '{env_var}' not found")
+        except KeyError:
+            raise EnvironmentError(f"Environment variable '{env_var}' not found.")
 
     @classmethod
     def path_to_str(cls, obj: Any) -> Any:
