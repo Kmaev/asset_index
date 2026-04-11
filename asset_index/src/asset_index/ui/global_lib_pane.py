@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
-from asset_index import import_utils
+from asset_index.utils import import_utils
 from asset_index.ui import asset_label
 
 reload(asset_label)

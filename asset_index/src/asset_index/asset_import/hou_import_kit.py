@@ -3,7 +3,7 @@ from pathlib import Path
 
 import hou
 
-from asset_index import base_import_kit
+from asset_index.asset_import import base_import_kit
 
 
 class HoudiniKitImporter(base_import_kit.BaseKitImporter):

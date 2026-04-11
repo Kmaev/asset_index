@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 
-from asset_index import import_utils
+from asset_index.utils import import_utils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

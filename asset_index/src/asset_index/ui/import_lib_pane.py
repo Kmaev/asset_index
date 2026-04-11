@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui
 
-from asset_index import import_utils
+from asset_index.utils import import_utils
 
 
 class ImportLibrary(QtWidgets.QFrame):
