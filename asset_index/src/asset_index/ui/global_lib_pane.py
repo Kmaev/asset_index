@@ -28,6 +28,9 @@ class GlobalLib(QtWidgets.QFrame):
         self.libraries.setCurrentRow(0)
         self.splitter.addWidget(self.libraries)
 
+        self.assets_stack = QtWidgets.QStackedWidget()
+        self.splitter.addWidget(self.assets_stack)
+
         self.assets = QtWidgets.QListWidget()
         self.assets.setViewMode(QtWidgets.QListView.IconMode)
         self.assets.setResizeMode(QtWidgets.QListView.Adjust)
@@ -38,7 +41,12 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.assets.setMovement(QtWidgets.QListView.Static)
         self.assets.setUniformItemSizes(True)
-        self.splitter.addWidget(self.assets)
+        self.assets_stack.addWidget(self.assets)
+
+        self.library_not_imported = QtWidgets.QLineEdit()
+        self.library_not_imported.setText("No assets found. Import a library to get started.")
+        self.library_not_imported.setAlignment(QtCore.Qt.AlignCenter)
+        self.assets_stack.addWidget(self.library_not_imported)
 
         self.splitter.setSizes([150, 450])
 
@@ -72,12 +80,17 @@ class GlobalLib(QtWidgets.QFrame):
                                 folder.is_dir()])
         return all_libraries
 
+
     def populate_asset_labels(self):
-        self.assets.clear()
         selected = self.get_selection(self.libraries).text()
         self.current_lib_path = self.global_asset_lib / f"{selected}/library_catalog.json"
         if not self.current_lib_path.is_file():
+            self.assets_stack.setCurrentIndex(1)
             return
+
+        self.assets_stack.setCurrentIndex(0)
+
+        self.assets.clear()
         with open(self.current_lib_path, "r") as f:
             self.selected_catalog = json.load(f)
 
