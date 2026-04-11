@@ -4,8 +4,8 @@ from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
-from asset_index.utils import import_utils
 from asset_index.ui import asset_label
+from asset_index.utils import import_utils
 
 reload(asset_label)
 
@@ -52,16 +52,35 @@ class GlobalLib(QtWidgets.QFrame):
     def populate_libraries_list(self):
         with open(self.libraries_data_file, "r") as f:
             libraries_list = json.load(f)
-        for lib in libraries_list.keys():
-            self.libraries.addItem(lib)
+        imported_libraries = sorted([x for x in libraries_list.keys()])
+        all_libraries = self.find_all_libraries()
+        print("All libraries: ", all_libraries)
+        for lib in imported_libraries:
+            self._add_library_item(lib, self.libraries, imported=True)
+        for lib in all_libraries:
+            if lib not in imported_libraries:
+                self._add_library_item(lib, self.libraries, imported=False)
+
+    def _add_library_item(self, name, parent, imported=True):
+        item = QtWidgets.QListWidgetItem(parent)
+        item.setText(name)
+        metadata = {"imported": imported}
+        item.setData(QtCore.Qt.UserRole, metadata)
+
+    def find_all_libraries(self):
+        all_libraries = sorted([folder.name for folder in self.global_asset_lib.iterdir() if
+                                folder.is_dir()])
+        return all_libraries
 
     def populate_asset_labels(self):
+        self.assets.clear()
         selected = self.get_selection(self.libraries).text()
         self.current_lib_path = self.global_asset_lib / f"{selected}/library_catalog.json"
+        if not self.current_lib_path.is_file():
+            return
         with open(self.current_lib_path, "r") as f:
             self.selected_catalog = json.load(f)
 
-        self.assets.clear()
         for path in self.selected_catalog[selected]:
             item = QtWidgets.QListWidgetItem()
             widget = asset_label.AssetFrame(Path(path))
