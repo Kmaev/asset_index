@@ -24,9 +24,10 @@ class BaseKitImporter:
 
     def __init__(self, library_path: str):
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
-        self.global_asset_catalog = self.global_asset_lib / "library_catalog.json"
 
         self.library_path = Path(library_path)
+        self.global_asset_catalog = self.library_path / "library_catalog.json"
+
         self.models_folder = self.library_path / "Models"
         self.added_new_assets = False
 
@@ -35,22 +36,25 @@ class BaseKitImporter:
         Run the full import: build the library catalog, render thumbnails, and update global metadata.
         """
         library_catalog = self.create_library_catalog()
-        assets = library_catalog[self.library_path]
+
+        library_name = self.library_path.name
+        assets = library_catalog[library_name]
         self.render_thumbnails(assets)
         if self.added_new_assets:
             self.update_global_library_index(library_catalog)
 
-    def create_library_catalog(self) -> dict[Path, list[Path]]:
+    def create_library_catalog(self) -> dict[str, list[Path]]:
         """
         Map library path to a list of USD asset files.
         """
         library_catalog = defaultdict(list)
+        library_name = self.library_path.name
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
                 if asset_folder.is_dir():
                     for file in asset_folder.iterdir():
                         if asset_folder.name in file.name and "usd" in file.suffix:
-                            library_catalog[self.library_path].append(file)
+                            library_catalog[library_name].append(file)
         return library_catalog
 
     def render_thumbnails(self, assets: list[Path]) -> None:
@@ -75,7 +79,7 @@ class BaseKitImporter:
             logging.info(f"Generating thumbnail: {asset}")
             yield asset
 
-    def update_global_library_index(self, library_catalog: dict[Path, list[Path]]):
+    def update_global_library_index(self, library_catalog: dict[str, list[Path]]):
         """
         Sync a library catalog into the global metadata file.
         """
@@ -141,7 +145,7 @@ class BaseKitImporter:
         Add a basic light rig with a Dome Light.
         """
         dome = UsdLux.DomeLight.Define(stage, "/DomeLight")
-        dome.CreateIntensityAttr(1.0)
+        dome.CreateIntensityAttr(100.0)
 
     @staticmethod
     def add_render_camera(stage: Usd.Stage):
@@ -206,12 +210,14 @@ class BaseKitImporter:
             "usdrecord",
             usd_file,
             output_img_path,
+            "--complexity", "veryhigh",
+            "--colorCorrectionMode", "sRGB",
             "--renderer", "Storm",
-            "--camera", "/Camera"
+            "--camera", "/Camera",
+            "--imageWidth", "180"
         ]
         try:
             subprocess.run(cmd, check=True)
         finally:
             if remove_usd_file:
                 Path(usd_file).unlink(missing_ok=True)
-
