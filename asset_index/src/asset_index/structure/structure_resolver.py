@@ -3,8 +3,10 @@ import logging
 from pathlib import Path
 
 from asset_index.utils import import_utils
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 class LibraryStructureResolver:
     def __init__(self, lib_name):
@@ -22,16 +24,12 @@ class LibraryStructureResolver:
         self.textures = self.lib_path / config["textures_path"]
         self.material = self.lib_path / config["materials_path"]
 
-        self.folder_structure_check = False
-        self.asset_structure_check = False
-
-    def run_library_validation(self) -> None:
-        self.folder_structure_check = self.validate_folder_structure()
-        logger.info("Folder structure check: ", self.folder_structure_check)
-        if self.folder_structure_check:
-            self.asset_structure_check = self.validate_asset_structure()
-            logger.info("Folder USD check: ", self.asset_structure_check)
-
+    def run_library_validation(self) -> tuple[bool, bool]:
+        folder_structure_check = self.validate_folder_structure()
+        logger.info("Folder structure check: ", folder_structure_check)
+        asset_structure_check = folder_structure_check and self.validate_asset_structure()
+        logger.info("Asset check: ", asset_structure_check)
+        return folder_structure_check, asset_structure_check
 
     def validate_folder_structure(self) -> bool:
         required = (self.models, self.textures, self.material)
