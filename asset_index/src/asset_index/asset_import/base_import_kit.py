@@ -14,6 +14,8 @@ from asset_index.utils import import_utils
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+from dataclasses import dataclass
+
 
 class BaseKitImporter:
     """
@@ -29,7 +31,11 @@ class BaseKitImporter:
         self.global_asset_catalog = self.library_path / "library_catalog.json"
 
         self.models_folder = self.library_path / "Models"
+
         self.added_new_assets = False
+        self.completed = False
+        self.interrupted = False
+
 
     def import_library(self) -> None:
         """
@@ -40,7 +46,7 @@ class BaseKitImporter:
         library_name = self.library_path.name
         assets = library_catalog[library_name]
         self.render_thumbnails(assets)
-        if self.added_new_assets:
+        if self.completed and self.added_new_assets:
             self.update_global_library_index(library_catalog)
 
     def create_library_catalog(self) -> dict[str, list[Path]]:
@@ -61,14 +67,37 @@ class BaseKitImporter:
         """
         Render thumbnails for USD assets by creating a temporary stage and calling the renderer.
         """
+
+        self.completed = False
+        self.interrupted = False
+        processed = 0
+
         for asset_path in self.iterate_with_progress_bar(assets):
             thumbnail_file = self.get_thumbnail_output_path(asset_path, "png")
+            print("Rendering asset: ", asset_path)
             if Path(thumbnail_file).exists():
+                processed += 1
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
                 continue
+
             temp_usd_file = self.create_temp_usd_render_stage(asset_path)
-            self.render_usd_stage(str(temp_usd_file), str(thumbnail_file))
-            self.added_new_assets = True
+            try:
+                self.render_usd_stage(str(temp_usd_file), str(thumbnail_file))
+                processed += 1
+                self.added_new_assets = True
+            except Exception:
+                print("Removing thumb from exception: ", asset_path)
+                thumbnail_file.unlink(missing_ok=True)
+                raise
+            if self.interrupted:
+                print("Removing thumb: ", asset_path)
+                thumbnail_file.unlink(missing_ok=True)
+                break
+
+        print("Processed: ", processed)
+        print("Assets: ", len(assets))
+
+        self.completed = (processed == len(assets))
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
         """
@@ -77,6 +106,7 @@ class BaseKitImporter:
         """
         for asset in assets:
             logging.info(f"Generating thumbnail: {asset}")
+
             yield asset
 
     def update_global_library_index(self, library_catalog: dict[str, list[Path]]):
