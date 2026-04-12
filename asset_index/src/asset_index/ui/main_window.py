@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
-
+import os
 from asset_index.core import library_index
 from asset_index.ui import global_lib_pane, local_lib_pane, import_lib_pane
 from asset_index.utils import import_utils
@@ -28,22 +28,20 @@ class AssetIndex(QtWidgets.QMainWindow):
 
         self.global_lib = QtWidgets.QPushButton("Global Library")
         self.local_lib = QtWidgets.QPushButton("Local Library")
-        self.import_library = QtWidgets.QPushButton("Import Library")
 
-        self.import_library_frame = import_lib_pane.ImportLibrary(self.core_index)
         self.global_lib_frame = global_lib_pane.GlobalLib(self.core_index)
         self.local_lib_frame = local_lib_pane.LocalLib(self.core_index)
 
         _widgets = [[self.global_lib, self.global_lib_frame],
-                    [self.local_lib, self.local_lib_frame],
-                    [self.import_library, self.import_library_frame], ]
-
+                    [self.local_lib, self.local_lib_frame]]
         for i, (button, frame) in enumerate(_widgets):
             self.button_layout.addWidget(button)
             self.stack.addWidget(frame)
             button.setProperty('stack-index', i)
 
             button.clicked.connect(self.on_button_clicked)
+
+
 
     def on_button_clicked(self):
         button = self.sender()

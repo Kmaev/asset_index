@@ -3,15 +3,19 @@ from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
-from asset_index.ui import asset_label
+from asset_index.ui import asset_label, import_lib_pane
 
 reload(asset_label)
+reload(import_lib_pane)
 
 
 class GlobalLib(QtWidgets.QFrame):
+    selected_lib_signal = QtCore.Signal(str)
+
     def __init__(self, core_index, parent=None):
         super(GlobalLib, self).__init__(parent=parent)
 
+        self.import_library_frame = None
         self.core_index = core_index
         self.central_layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.central_layout)
@@ -38,18 +42,36 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.assets.setMovement(QtWidgets.QListView.Static)
         self.assets.setUniformItemSizes(True)
+
         self.assets_stack.addWidget(self.assets)
+
+        self.library_not_imported_frame = QtWidgets.QFrame()
+        self.library_not_imported_layout = QtWidgets.QVBoxLayout()
+        self.library_not_imported_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.library_not_imported_frame.setLayout(self.library_not_imported_layout)
+
+        self.assets_stack.addWidget(self.library_not_imported_frame)
 
         self.library_not_imported = QtWidgets.QLineEdit()
         self.library_not_imported.setText("No assets found. Import the library to get started.")
         self.library_not_imported.setAlignment(QtCore.Qt.AlignCenter)
-        self.assets_stack.addWidget(self.library_not_imported)
+        self.library_not_imported_layout.addWidget(self.library_not_imported)
+
+        self.import_library = QtWidgets.QPushButton("Import Library")
+        self.library_not_imported_layout.addWidget(self.import_library)
+
+        self.import_library_frame = import_lib_pane.ImportLibrary(self.core_index)
+
+        self.assets_stack.addWidget(self.import_library_frame)
 
         self.splitter.setSizes([150, 450])
-
         self.populate_asset_labels()
 
         self.libraries.itemSelectionChanged.connect(self.populate_asset_labels)
+
+        self.import_library.clicked.connect(self.on_start_import_clicked)
+        self.import_library_frame.update_global_lib.connect(self.on_library_imported)
+        self.selected_lib_signal.connect(self.import_library_frame.set_library)
 
     def get_selection(self, widget):
         return widget.selectedItems()[0]
@@ -77,6 +99,8 @@ class GlobalLib(QtWidgets.QFrame):
 
         if not selected_catalog:
             self.assets_stack.setCurrentIndex(1)
+
+            self.selected_lib_signal.emit(selected)
             return
 
         self.assets_stack.setCurrentIndex(0)
@@ -89,3 +113,16 @@ class GlobalLib(QtWidgets.QFrame):
             item.setSizeHint(widget.sizeHint())
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
+
+    def on_start_import_clicked(self):
+        self.assets_stack.setCurrentIndex(2)
+
+    def on_library_imported(self):
+        self.populate_asset_labels()
+        replay = QtWidgets.QMessageBox.information(
+            self,
+            "Success",
+            "Library Imported"
+        )
+        if replay:
+            self.assets_stack.setCurrentIndex(0)
