@@ -2,6 +2,8 @@ from PySide6 import QtWidgets, QtGui, QtCore
 
 
 class LocalLib(QtWidgets.QFrame):
+    """Placeholder UI for local library (not implemented)."""
+
     def __init__(self, core_index, parent=None):
         super(LocalLib, self).__init__(parent=parent)
         self.core_index = core_index

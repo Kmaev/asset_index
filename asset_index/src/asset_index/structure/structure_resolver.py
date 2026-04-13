@@ -9,6 +9,8 @@ logger.setLevel(logging.INFO)
 
 
 class LibraryStructureResolver:
+    """Class to validate folder and asset structure for a given library."""
+
     def __init__(self, lib_name):
         self.lib_name = lib_name
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
@@ -16,15 +18,17 @@ class LibraryStructureResolver:
         self.lib_path = self.global_asset_lib / lib_name
         if not self.lib_path.is_dir():
             raise FileNotFoundError("Library directory doesn't exists")
+
         current_dir = Path(__file__).parent
         structure_config = current_dir / "structure_config.json"
+
         with open(structure_config, "r") as f:
             config = json.load(f)
         self.models = self.lib_path / config["models_path"]
         self.textures = self.lib_path / config["textures_path"]
-        self.material = self.lib_path / config["materials_path"]
 
     def run_library_validation(self) -> tuple[bool, bool]:
+        """Run folder and asset validation checks."""
         folder_structure_check = self.validate_folder_structure()
         logger.info("Folder structure check: ", folder_structure_check)
         asset_structure_check = folder_structure_check and self.validate_asset_structure()
@@ -32,13 +36,16 @@ class LibraryStructureResolver:
         return folder_structure_check, asset_structure_check
 
     def validate_folder_structure(self) -> bool:
-        required = (self.models, self.textures, self.material)
+        """Check required directory structure exists."""
+        required = (self.models, self.textures)
         return all(folder.is_dir() for folder in required)
 
     def validate_asset_structure(self) -> bool:
+        """Check asset folder structure is correct and contains USD file"""
         return any(asset.is_dir() and self._asset_has_valid_usd(asset)
                    for asset in self.models.iterdir())
 
     def _asset_has_valid_usd(self, asset: Path) -> bool:
+        """Check asset directory contains a matching USD file."""
         return any(f.suffix.lower() == ".usd" and asset.name.lower() in f.name.lower()
                    for f in asset.iterdir())

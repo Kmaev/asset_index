@@ -10,6 +10,8 @@ reload(import_lib_pane)
 
 
 class GlobalLib(QtWidgets.QFrame):
+    """UI widget for browsing and importing assets into global library"""
+
     selected_lib_signal = QtCore.Signal(str)
 
     def __init__(self, core_index, parent=None):
@@ -73,10 +75,12 @@ class GlobalLib(QtWidgets.QFrame):
         self.import_library_frame.update_global_lib.connect(self.on_library_imported)
         self.selected_lib_signal.connect(self.import_library_frame.set_library)
 
-    def get_selection(self, widget):
+    def get_selection(self, widget: QtWidgets.QListWidget) -> QtWidgets.QListWidgetItem:
+        """Return selected item from widget."""
         return widget.selectedItems()[0]
 
-    def populate_libraries_list(self):
+    def populate_libraries_list(self) -> None:
+        """Populate list with imported and available libraries."""
         imported_libraries = self.core_index.list_imported_libraries()
         all_libraries = self.core_index.list_all_libraries()
 
@@ -86,24 +90,24 @@ class GlobalLib(QtWidgets.QFrame):
             if lib not in imported_libraries:
                 self._add_library_item(lib, self.libraries, imported=False)
 
-    def _add_library_item(self, name, parent, imported=True):
+    def _add_library_item(self, name, parent, imported=True) -> None:
+        """Add library item with metadata."""
         item = QtWidgets.QListWidgetItem(parent)
         item.setText(name)
         metadata = {"imported": imported}
         item.setData(QtCore.Qt.UserRole, metadata)
 
     def populate_asset_labels(self):
+        """Update asset view for selected library."""
         selected = self.get_selection(self.libraries).text()
         selected_catalog = self.core_index.load_library_catalog(selected)
 
         if not selected_catalog:
             self.assets_stack.setCurrentIndex(1)
-
             self.selected_lib_signal.emit(selected)
             return
 
         self.assets_stack.setCurrentIndex(0)
-
         self.assets.clear()
 
         for path in selected_catalog:
@@ -114,14 +118,10 @@ class GlobalLib(QtWidgets.QFrame):
             self.assets.setItemWidget(item, widget)
 
     def on_start_import_clicked(self):
+        """Switch to import view."""
         self.assets_stack.setCurrentIndex(2)
 
     def on_library_imported(self):
+        """Refresh UI after library import."""
         self.populate_asset_labels()
-        replay = QtWidgets.QMessageBox.information(
-            self,
-            "Success",
-            "Library Imported"
-        )
-        if replay:
-            self.assets_stack.setCurrentIndex(0)
+        self.assets_stack.setCurrentIndex(0)

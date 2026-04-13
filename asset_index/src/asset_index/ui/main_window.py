@@ -1,13 +1,15 @@
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
-import os
+
 from asset_index.core import library_index
-from asset_index.ui import global_lib_pane, local_lib_pane, import_lib_pane
+from asset_index.ui import global_lib_pane, local_lib_pane
 from asset_index.utils import import_utils
 
 
 class AssetIndex(QtWidgets.QMainWindow):
+    """Main window for asset library UI."""
+
     def __init__(self, parent=None):
         super(AssetIndex, self).__init__(parent=parent)
 
@@ -25,7 +27,6 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.stack = QtWidgets.QStackedWidget()
         self.central_layout.addWidget(self.stack)
 
-
         self.global_lib = QtWidgets.QPushButton("Global Library")
         self.local_lib = QtWidgets.QPushButton("Local Library")
 
@@ -41,9 +42,8 @@ class AssetIndex(QtWidgets.QMainWindow):
 
             button.clicked.connect(self.on_button_clicked)
 
-
-
     def on_button_clicked(self):
+        """Switch stacked view based on clicked button."""
         button = self.sender()
 
         index = button.property('stack-index')
@@ -51,6 +51,7 @@ class AssetIndex(QtWidgets.QMainWindow):
 
 
 def main():
+    """Run application"""
     app = QtWidgets.QApplication([])
     win = AssetIndex()
     win.show()

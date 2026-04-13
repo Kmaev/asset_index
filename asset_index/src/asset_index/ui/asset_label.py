@@ -2,6 +2,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 
 
 class AssetFrame(QtWidgets.QFrame):
+    """UI widget displaying an asset thumbnail and name."""
 
     def __init__(self, asset_path, parent=None):
         super(AssetFrame, self).__init__(parent=parent)

@@ -10,6 +10,8 @@ reload(structure_resolver)
 
 
 class ImportLibrary(QtWidgets.QFrame):
+    """UI widget for validating and importing asset libraries."""
+
     update_global_lib = QtCore.Signal()
 
     def __init__(self, core_index, parent=None):
@@ -62,6 +64,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
 
     def populate_libraries_view(self, root: Path, parent_item):
+        """Populate tree view with library content."""
         folders = sorted((p for p in root.iterdir() if not p.name.startswith(".")),
                          key=lambda p: p.name.lower())
         for folder in folders:
@@ -73,25 +76,30 @@ class ImportLibrary(QtWidgets.QFrame):
                 self.populate_libraries_view(folder, item)
 
     def validate(self):
+        """Validate selected library folder structure."""
         st = structure_resolver.LibraryStructureResolver(self.library)
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
-            self.toggle_import_available()
+            self.enable_import_button()
         else:
-            self.toggle_edit_available()
+            self.enable_edit_button()
 
     def trigger_validation(self):
+        """Reset validation state on library selection change."""
         self.import_lib.setDisabled(True)
         self.edit_lib.setDisabled(True)
         self.validation_passed = False
 
-    def toggle_import_available(self):
+    def enable_import_button(self):
+        """Enable import action."""
         self.import_lib.setDisabled(False)
 
-    def toggle_edit_available(self):
+    def enable_edit_button(self):
+        """Enable edit action."""
         self.edit_lib.setDisabled(False)
 
     def import_library(self):
+        """Run library import process."""
         import_lib = qt_import_kit.QtKitImporter(str(self.library_path))
         import_lib.import_library()
 
@@ -103,6 +111,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.libraries_view.clear()
 
     def set_library(self, library: str):
+        """Set currently selected library and populate view."""
         self.libraries_view.clear()
         self.library = library
         self.library_path = self.core_index.global_asset_lib / self.library
