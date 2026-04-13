@@ -14,8 +14,6 @@ from asset_index.utils import import_utils
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-from dataclasses import dataclass
-
 
 class BaseKitImporter:
     """
@@ -26,6 +24,7 @@ class BaseKitImporter:
 
     def __init__(self, library_path: str):
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
+        self.libraries_data_file = self.global_asset_lib / "libraries.json"
 
         self.library_path = Path(library_path)
         self.global_asset_catalog = self.library_path / "library_catalog.json"
@@ -35,7 +34,6 @@ class BaseKitImporter:
         self.added_new_assets = False
         self.completed = False
         self.interrupted = False
-
 
     def import_library(self) -> None:
         """
@@ -48,6 +46,21 @@ class BaseKitImporter:
         self.render_thumbnails(assets)
         if self.completed and self.added_new_assets:
             self.update_global_library_index(library_catalog)
+            self.update_imported_libraries_index(library_name)
+
+    def update_imported_libraries_index(self, library: str) -> None:
+        """
+        Add a library into qn imported library metadata file.
+        """
+        if self.libraries_data_file.exists():
+            with open(self.libraries_data_file, "r") as f:
+                libraries_list = json.load(f)
+        else:
+            libraries_list = []
+        libraries_list.append(library)
+        imported_libraries = sorted(libraries_list)
+        with open(self.libraries_data_file, "w") as f:
+            json.dump(imported_libraries, f, indent=4, default=str)
 
     def create_library_catalog(self) -> dict[str, list[Path]]:
         """
@@ -67,14 +80,12 @@ class BaseKitImporter:
         """
         Render thumbnails for USD assets by creating a temporary stage and calling the renderer.
         """
-
         self.completed = False
         self.interrupted = False
         processed = 0
 
         for asset_path in self.iterate_with_progress_bar(assets):
             thumbnail_file = self.get_thumbnail_output_path(asset_path, "png")
-            print("Rendering asset: ", asset_path)
             if Path(thumbnail_file).exists():
                 processed += 1
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
@@ -86,17 +97,11 @@ class BaseKitImporter:
                 processed += 1
                 self.added_new_assets = True
             except Exception:
-                print("Removing thumb from exception: ", asset_path)
                 thumbnail_file.unlink(missing_ok=True)
                 raise
             if self.interrupted:
-                print("Removing thumb: ", asset_path)
                 thumbnail_file.unlink(missing_ok=True)
                 break
-
-        print("Processed: ", processed)
-        print("Assets: ", len(assets))
-
         self.completed = (processed == len(assets))
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
@@ -170,22 +175,11 @@ class BaseKitImporter:
         references.AddReference(usd_file_path)
 
     @staticmethod
-    def add_light_rig(stage: Usd.Stage):
+    def calculate_bbox_data(stage: Usd.Stage, prim_path: str):
         """
-        Add a basic light rig with a Dome Light.
+         Calculate the bounding box center, size, and maximum dimension for a given primitive.
         """
-        dome = UsdLux.DomeLight.Define(stage, "/DomeLight")
-        dome.CreateIntensityAttr(100.0)
-
-    @staticmethod
-    def add_render_camera(stage: Usd.Stage):
-        """
-        Compute asset's bounding box and based on size calculate render camera position and rotation.
-        Set up camera parameters.
-        """
-        camera = UsdGeom.Camera.Define(stage, "/Camera")
-
-        prim = stage.GetPrimAtPath("/main")
+        prim = stage.GetPrimAtPath(prim_path)
         bbox_cache = UsdGeom.BBoxCache(
             Usd.TimeCode.Default(),
             [UsdGeom.Tokens.default_]
@@ -197,6 +191,29 @@ class BaseKitImporter:
         center = bbox_range.GetMidpoint()
         size = bbox_range.GetSize()
         max_dim = max(size)
+        return center, size, max_dim
+
+    def add_light_rig(self, stage: Usd.Stage):
+        """
+        Add a basic light rig with a Dome Light.
+        """
+        _, size, max_dim = self.calculate_bbox_data(stage, "/main")
+        max_dim = max_dim if max_dim < 1.2 else 1.2
+
+        hdr = Path(__file__).resolve().parents[3] / "resources" / "belfast_farmhouse_2k.hdr"
+        dome = UsdLux.DomeLight.Define(stage, "/DomeLight")
+
+        dome.CreateTextureFileAttr().Set(str(hdr))
+        dome.CreateIntensityAttr().Set(max_dim)
+
+    def add_render_camera(self, stage: Usd.Stage):
+        """
+        Compute asset's bounding box and based on size calculate render camera position and rotation.
+        Set up camera parameters.
+        """
+        camera = UsdGeom.Camera.Define(stage, "/Camera")
+
+        center, size, max_dim = self.calculate_bbox_data(stage, "/main")
 
         sensor_width = 36.0
         focal_length = 50.0
@@ -241,7 +258,7 @@ class BaseKitImporter:
             usd_file,
             output_img_path,
             "--complexity", "veryhigh",
-            "--colorCorrectionMode", "sRGB",
+            "--colorCorrectionMode", "disabled",
             "--renderer", "Storm",
             "--camera", "/Camera",
             "--imageWidth", "180"

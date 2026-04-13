@@ -77,7 +77,6 @@ class GlobalLib(QtWidgets.QFrame):
         return widget.selectedItems()[0]
 
     def populate_libraries_list(self):
-
         imported_libraries = self.core_index.list_imported_libraries()
         all_libraries = self.core_index.list_all_libraries()
 

@@ -13,16 +13,9 @@ class QtKitImporter(base_import_kit.BaseKitImporter):
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
         total = len(assets)
-
-        progress = QtWidgets.QProgressDialog(
-            "Generating thumbnails",
-            "Cancel",
-            0,
-            total
-        )
+        progress = QtWidgets.QProgressDialog("Generating thumbnails", "Cancel", 0, total)
         progress.setWindowModality(QtCore.Qt.WindowModal)
         progress.setMinimumDuration(0)
-
         try:
             for i, asset in enumerate(assets):
                 if progress.wasCanceled():
@@ -31,7 +24,6 @@ class QtKitImporter(base_import_kit.BaseKitImporter):
 
                 progress.setValue(i + 1)
                 progress.setLabelText(f"{asset.name}")
-
                 QtWidgets.QApplication.processEvents()
 
                 yield asset
