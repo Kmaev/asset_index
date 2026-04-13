@@ -47,5 +47,5 @@ class LibraryStructureResolver:
 
     def _asset_has_valid_usd(self, asset: Path) -> bool:
         """Check asset directory contains a matching USD file."""
-        return any(f.suffix.lower() == ".usd" and asset.name.lower() in f.name.lower()
+        return any(".usd" in f.suffix.lower() and asset.name.lower() in f.name.lower()
                    for f in asset.iterdir())
