@@ -9,7 +9,8 @@ def build(source_path:str, build_path:str, install_path:str, targets:list[str]):
 
 
     to_copy = {
-        source_path / "src": install_path / "python"
+        source_path / "src": install_path / "python",
+        source_path / "resources": install_path / "resources"
     }
 
     if "install" in targets:
