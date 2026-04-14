@@ -24,11 +24,14 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.splitter = QtWidgets.QSplitter()
         self.splitter.setContentsMargins(10, 10, 10, 10)
+        self.splitter.setChildrenCollapsible(False)
+        self.splitter.setSizes([150, 450])
         self.central_layout.addWidget(self.splitter)
 
         self.libraries = QtWidgets.QListWidget()
         self.populate_libraries_list()
         self.libraries.setCurrentRow(0)
+        self.libraries.setMinimumWidth(100)
         self.splitter.addWidget(self.libraries)
 
         self.assets_stack = QtWidgets.QStackedWidget()
@@ -38,12 +41,15 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets.setViewMode(QtWidgets.QListView.IconMode)
         self.assets.setResizeMode(QtWidgets.QListView.Adjust)
         self.assets.setWrapping(True)
-        self.assets.setFlow(QtWidgets.QListView.LeftToRight)
-        self.assets.setSpacing(10)
+        self.assets.setMinimumWidth(150)
         self.assets.setIconSize(QtCore.QSize(150, 150))
 
         self.assets.setMovement(QtWidgets.QListView.Static)
         self.assets.setUniformItemSizes(True)
+        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.assets.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.assets.setMinimumSize(10, 10)
+        self.assets.mousePressEvent = self._list_mouse_press_event
 
         self.assets_stack.addWidget(self.assets)
 
@@ -66,7 +72,6 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.assets_stack.addWidget(self.import_library_frame)
 
-        self.splitter.setSizes([150, 450])
         self.populate_asset_labels()
 
         self.libraries.itemSelectionChanged.connect(self.populate_asset_labels)
@@ -113,6 +118,7 @@ class GlobalLib(QtWidgets.QFrame):
         for path in selected_catalog:
             item = QtWidgets.QListWidgetItem()
             widget = asset_label.AssetFrame(Path(path))
+
             item.setSizeHint(widget.sizeHint())
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
@@ -125,3 +131,11 @@ class GlobalLib(QtWidgets.QFrame):
         """Refresh UI after library import."""
         self.populate_asset_labels()
         self.assets_stack.setCurrentIndex(0)
+
+    def _list_mouse_press_event(self, event):
+        item = self.assets.itemAt(event.pos())
+
+        if item is None:
+            self.assets.clearSelection()
+            self.assets.setCurrentItem(None)
+        QtWidgets.QListWidget.mousePressEvent(self.assets, event)

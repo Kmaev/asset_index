@@ -27,18 +27,22 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.splitter = QtWidgets.QSplitter()
         self.splitter.setContentsMargins(0, 0, 0, 0)
+        self.splitter.setChildrenCollapsible(False)
+        self.splitter.setSizes([200, 400])
         self.central_layout.addWidget(self.splitter)
 
         self.libraries_view = QtWidgets.QTreeWidget()
         self.splitter.addWidget(self.libraries_view)
         self.libraries_view.setHeaderLabel("Library Content")
+        self.libraries_view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.libraries_view.setMinimumWidth(100)
+        self.libraries_view.mousePressEvent = self._tree_mouse_press_event
 
         self.library_data = QtWidgets.QWidget()
         self.splitter.addWidget(self.library_data)
 
         self.library_data_layout = QtWidgets.QVBoxLayout()
         self.library_data.setLayout(self.library_data_layout)
-        self.splitter.setSizes([200, 400])
 
         self.buttons_group = QtWidgets.QFrame()
         self.library_data_layout.addWidget(self.buttons_group)
@@ -117,3 +121,11 @@ class ImportLibrary(QtWidgets.QFrame):
         self.library_path = self.core_index.global_asset_lib / self.library
         self.populate_libraries_view(self.library_path, self.libraries_view)
         self.trigger_validation()
+
+    def _tree_mouse_press_event(self, event):
+        item = self.libraries_view.itemAt(event.pos())
+
+        if item is None:
+            self.libraries_view.clearSelection()
+            self.libraries_view.setCurrentItem(None)
+        QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
