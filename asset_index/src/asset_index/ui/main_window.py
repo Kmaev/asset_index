@@ -42,6 +42,17 @@ class AssetIndex(QtWidgets.QMainWindow):
 
             button.clicked.connect(self.on_button_clicked)
 
+        style_file = Path(__file__).resolve().parents[3] / "resources" / "style.qss"
+        style = ""
+
+        if style_file.is_file():
+            with open(style_file, 'r') as f:
+                style = f.read()
+        self.setStyleSheet(style)
+
+        if self.parent():
+            self.parent().setStyleSheet(self.parent().styleSheet())
+
     def on_button_clicked(self):
         """Switch stacked view based on clicked button."""
         button = self.sender()
