@@ -62,7 +62,7 @@ class AssetIndex(QtWidgets.QMainWindow):
 
 
 def main():
-    """Run application"""
+    """Run application."""
     app = QtWidgets.QApplication([])
     win = AssetIndex()
     win.show()

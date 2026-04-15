@@ -5,7 +5,11 @@ from pathlib import Path
 @dataclass
 class FolderStructure:
     """
-    Defines the expected folder structure. In this example, assets are organized into two folders: Models and Textures.
+    Defines the expected folder structure for assets.
+
+    In this example, assets are organized into two folders: Models and Textures.
+    Each asset in the Models folder is expected to be contained in its own directory,
+    with the directory name matching the name of the corresponding USD file.
     """
     models_path: str = "Models"
     textures_path: str = "Textures"
@@ -31,11 +35,11 @@ class LightingSettings:
     exposure_clamp: float = 1.2
 
 
-
 @dataclass
 class ImageSettings:
     """
-    Settings for rendering via `usdrecord`. Field values must match the expected `usdrecord` command-line parameters.
+    Settings for rendering via `usdrecord`.
+    Field values must match the expected `usdrecord` command-line parameters.
     """
     image_width: str = "140"
     color_correction: str = "disabled"

@@ -4,12 +4,11 @@ from typing import Any
 
 
 class ImportUtils:
-    """
-    Static utilities for asset import workflows.
-    """
+    """Static utilities for asset import workflows."""
 
     @staticmethod
     def get_env_var(env_var: str) -> str:
+        """Return the value of the given environment variable."""
         try:
             return os.environ[env_var]
         except KeyError:
@@ -17,9 +16,7 @@ class ImportUtils:
 
     @classmethod
     def path_to_str(cls, obj: Any) -> Any:
-        """
-        Recursively convert Path objects within a dictionary or list to strings.
-        """
+        """Recursively convert Path objects within a dictionary or list to strings."""
         if isinstance(obj, dict):
             return {str(k): cls.path_to_str(v) for k, v in obj.items()}
         elif isinstance(obj, list):

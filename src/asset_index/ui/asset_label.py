@@ -1,6 +1,8 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 
 from asset_index import config
+
+
 class AssetFrame(QtWidgets.QFrame):
     """UI widget displaying an asset thumbnail and name."""
 

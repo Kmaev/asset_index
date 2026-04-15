@@ -6,7 +6,7 @@ from asset_index.utils import import_utils
 
 
 class LibraryIndex:
-    """Class to manage asset library indexing and metadata"""
+    """Class to manage asset library indexing and metadata."""
 
     def __init__(self):
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
@@ -30,14 +30,14 @@ class LibraryIndex:
         return imported_libraries
 
     def list_unimported_libraries(self) -> list:
-        """Return libraries not yet imported."""
+        """Return libraries that have not yet been imported."""
         imported_libraries = self.list_imported_libraries()
         all_libraries = self.list_all_libraries()
         not_imported_libraries = [lib for lib in all_libraries if lib not in imported_libraries]
         return not_imported_libraries
 
     def load_library_catalog(self, library) -> Any | None:
-        """Load and return catalog data for a given library."""
+        """Load catalog data for a given library."""
         current_lib_path = self.global_asset_lib / f"{library}/library_catalog.json"
         if not current_lib_path.is_file():
             return None

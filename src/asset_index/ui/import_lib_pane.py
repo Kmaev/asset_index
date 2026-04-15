@@ -119,9 +119,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.libraries_view.clear()
 
     def on_edit_clicked(self):
-        """
-        displays not implemented message
-        """
+        """Placeholder, display not implemented message."""
         self.display_info_message("Editing is not yet supported")
 
     def set_library(self, library: str):
@@ -133,6 +131,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.trigger_validation()
 
     def _tree_mouse_press_event(self, event):
+        """Clear selection on empty-space click."""
         item = self.libraries_view.itemAt(event.pos())
 
         if item is None:
@@ -141,4 +140,5 @@ class ImportLibrary(QtWidgets.QFrame):
         QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
 
     def display_info_message(self, message):
+        """Helper, displays information message."""
         QtWidgets.QMessageBox.information(self, "Information", message)

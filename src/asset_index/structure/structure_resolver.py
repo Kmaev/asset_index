@@ -1,9 +1,8 @@
-import json
 import logging
 from pathlib import Path
 
-from asset_index.utils import import_utils
 from asset_index import config
+from asset_index.utils import import_utils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -39,10 +38,11 @@ class LibraryStructureResolver:
         return all(folder.is_dir() for folder in required)
 
     def validate_asset_structure(self) -> bool:
-        """Check asset folder structure is correct and contains USD file"""
+        """Check asset folder structure is correct and contains USD file."""
         return any(asset.is_dir() and self._asset_has_valid_usd(asset)
                    for asset in self.models.iterdir())
 
+    @staticmethod
     def _asset_has_valid_usd(self, asset: Path) -> bool:
         """Check asset directory contains a matching USD file."""
         return any(".usd" in f.suffix.lower() and asset.name.lower() in f.name.lower()

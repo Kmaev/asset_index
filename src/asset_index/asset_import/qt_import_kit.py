@@ -7,9 +7,7 @@ from asset_index.asset_import import base_import_kit
 
 
 class QtKitImporter(base_import_kit.BaseKitImporter):
-    """
-    Qt Kit Importer, adds an interruptible progress dialog during asset conversion.
-    """
+    """Qt Kit Importer, adds an interruptible progress dialog during asset conversion."""
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
         total = len(assets)

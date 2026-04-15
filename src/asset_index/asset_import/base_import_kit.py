@@ -19,8 +19,10 @@ logger.setLevel(logging.INFO)
 class BaseKitImporter:
     """
     Base class for importing KitBash asset libraries into a production pipeline.
-    For each USD asset, creates a temporary render file, computes the asset’s bounding box, and uses it to set up and position a render camera. Adds a basic light rig and generates a thumbnail using usdrecord with the Storm renderer.
-    Updates the global library metadata file with the library key and asset paths
+    For each USD asset, creates a temporary render file, computes the asset’s bounding box,
+    and uses it to set up and position a render camera. Adds a basic light rig
+    and generates a thumbnail using usdrecord.
+    Updates the global library metadata file with the library key and asset paths.
     """
 
     def __init__(self, library_path: str):
@@ -40,9 +42,7 @@ class BaseKitImporter:
         self.interrupted = False
 
     def import_library(self) -> None:
-        """
-        Run the full import: build the library catalog, render thumbnails, and update global metadata.
-        """
+        """Run the full import: build the library catalog, render thumbnails, and update global metadata."""
         library_catalog = self.create_library_catalog()
 
         library_name = self.library_path.name
@@ -53,9 +53,7 @@ class BaseKitImporter:
             self.update_imported_libraries_index(library_name)
 
     def update_imported_libraries_index(self, library: str) -> None:
-        """
-        Add a library into qn imported library metadata file.
-        """
+        """Add a library into an imported library metadata file."""
         if self.libraries_data_file.exists():
             with open(self.libraries_data_file, "r") as f:
                 libraries_list = json.load(f)
@@ -69,9 +67,7 @@ class BaseKitImporter:
             json.dump(imported_libraries, f, indent=4, default=str)
 
     def create_library_catalog(self) -> dict[str, list[Path]]:
-        """
-        Map library path to a list of USD asset files.
-        """
+        """Map library path to a list of USD asset files."""
         library_catalog = defaultdict(list)
         library_name = self.library_path.name
         if self.models_folder.is_dir():
@@ -83,9 +79,7 @@ class BaseKitImporter:
         return library_catalog
 
     def render_thumbnails(self, assets: list[Path]) -> None:
-        """
-        Render thumbnails for USD assets by creating a temporary stage and calling the renderer.
-        """
+        """Render thumbnails for USD assets by creating a temporary stage."""
         self.completed = False
         self.interrupted = False
         processed = 0
@@ -112,8 +106,8 @@ class BaseKitImporter:
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
         """
-        Iterate over assets while reporting render progress.
-        Default implementation logs progress; may be overridden for DCC-specific behavior.
+        Report render progress.
+        Default implementation logs progress, may be overridden for DCC-specific behavior.
         """
         for asset in assets:
             logging.info(f"Generating thumbnail: {asset}")
@@ -121,9 +115,7 @@ class BaseKitImporter:
             yield asset
 
     def update_global_library_index(self, library_catalog: dict[str, list[Path]]):
-        """
-        Sync a library catalog into the global metadata file.
-        """
+        """Sync a library catalog into the global metadata file."""
         if self.global_asset_catalog.exists():
             with open(self.global_asset_catalog, "r") as f:
                 library_data = json.load(f)
@@ -145,9 +137,7 @@ class BaseKitImporter:
 
     @staticmethod
     def get_thumbnail_output_path(usd_file_path: Path, ext: str) -> Path:
-        """
-        Generate the thumbnail path by replacing the USD file extension with the specified extension.
-        """
+        """Generate the thumbnail path by replacing the USD file extension with the specified extension."""
         return usd_file_path.with_suffix(f".{ext}")
 
     def create_temp_usd_render_stage(self, usd_file_path: Path) -> Path:
@@ -172,9 +162,7 @@ class BaseKitImporter:
 
     @staticmethod
     def reference_library_asset(usd_file_path: str, stage: Usd.Stage, asset_prim_path: Sdf.Path):
-        """
-        Reference the asset at the specified prim path.
-        """
+        """Reference the asset at the specified prim path."""
         parent_prim = stage.DefinePrim(asset_prim_path)
         stage.SetDefaultPrim(parent_prim)
         references = parent_prim.GetReferences()
@@ -182,9 +170,7 @@ class BaseKitImporter:
 
     @staticmethod
     def calculate_bbox_data(stage: Usd.Stage, prim_path: str):
-        """
-         Calculate the bounding box center, size, and maximum dimension for a given primitive.
-        """
+        """Calculate the bounding box center, size, and maximum dimension for a given primitive."""
         prim = stage.GetPrimAtPath(prim_path)
         bbox_cache = UsdGeom.BBoxCache(
             Usd.TimeCode.Default(),
@@ -200,9 +186,7 @@ class BaseKitImporter:
         return center, size, max_dim
 
     def add_light_rig(self, stage: Usd.Stage):
-        """
-        Add a basic light rig with a Dome Light.
-        """
+        """Add a basic light rig with a Dome Light."""
         _, size, max_dim = self.calculate_bbox_data(stage, "/main")
         exposure = self.render_config.lighting.exposure
         intensity = self.render_config.lighting.intensity
@@ -218,7 +202,7 @@ class BaseKitImporter:
 
     def add_render_camera(self, stage: Usd.Stage):
         """
-        Compute asset's bounding box and based on size calculate render camera position and rotation.
+        Create render camera and based on bounding box data calculate render camera position and rotation.
         Set up camera parameters.
         """
         camera = UsdGeom.Camera.Define(stage, "/Camera")
@@ -259,9 +243,7 @@ class BaseKitImporter:
         camera.CreateVerticalApertureAttr().Set(sensor_width)
 
     def render_usd_stage(self, usd_file: str, output_img_path: str, remove_usd_file: bool = True):
-        """
-        Execute render using usdrecord and the Storm renderer. Remove the temporary USD file.
-        """
+        """Execute render using usdrecord and the Storm renderer. Remove the temporary USD file."""
         cmd = [
             "usdrecord",
             usd_file,

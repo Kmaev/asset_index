@@ -10,7 +10,7 @@ reload(import_lib_pane)
 
 
 class GlobalLib(QtWidgets.QFrame):
-    """UI widget for browsing and importing assets into global library"""
+    """UI widget for browsing and importing assets into global library."""
 
     selected_lib_signal = QtCore.Signal(str)
 
@@ -133,6 +133,7 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets_stack.setCurrentIndex(0)
 
     def _list_mouse_press_event(self, event):
+        """Clear selection on empty-space click."""
         item = self.assets.itemAt(event.pos())
 
         if item is None:
