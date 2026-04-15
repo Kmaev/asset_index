@@ -1,19 +1,38 @@
-This repository contains a USD asset browser, a personal project I am currently developing.
+This repository contains a USD asset browser, a personal project currently in development.
 
-The goal of this project is to create a tool that works across multiple DCC applications, allowing assets to be imported seamlessly into a stage.
+The goal of this project is to create a tool that works across multiple DCC applications, enabling asset import into a USD stage.
 
-One of the core features—currently merged into the main branch—is an asset check-in process for a production pipeline. As an example, the project uses a KitBash library.
+Current features include:
+- Asset validation against the expected production pipeline folder structure (basic example; to be extended)
+- Thumbnail rendering
+- Global library asset browsing
+
+All rendering and folder structure configurations are defined in `config.py`.
+
+<img width="1470" height="906" alt="image" src="https://github.com/user-attachments/assets/ee43e8a6-6b33-4c9c-9339-090fc1b2a4c1" />
+<img width="1470" height="906" alt="image" src="https://github.com/user-attachments/assets/1a5fca75-c871-4d5b-9b2d-13dc6f370eb8" />
+
+
+A short demo showcasing the current state of development is included below.
+
+https://github.com/user-attachments/assets/644b2e78-a3c7-4ce9-ae70-5e5a851bdd4d
+
+---
+
+One of the core features—now merged into the main branch—is an asset check-in workflow designed for production pipelines. As an example, the project uses a KitBash-style asset library.
 
 The check-in process includes:
 - Creating a library metadata catalog
 - Generating a temporary USD stage for each asset
 - Adding a light rig
-- Computing the camera position and rotation for thumbnail rendering based on the calculated bounding box of the asset’s geometry
+- Computing camera position and rotation based on the asset’s bounding box for thumbnail framing
 - Rendering thumbnails
 
-This process prepares assets for ingestion into the asset browser and production pipeline.
+This process prepares assets for ingestion into both the asset browser and a production pipeline.
 
-Examples rendered thumbnails:
+---
+
+Example rendered thumbnails:
 
 <img width="256" height="256" alt="KB3D_IRF_BldgLgFortress_A" src="https://github.com/user-attachments/assets/14e2b59c-42d0-49bc-88df-9e191dc42aa4" /><img width="256" height="256" alt="KB3D_IRF_BldgMdCrypt_A" src="https://github.com/user-attachments/assets/be528a3f-de15-4291-b46a-ac64347cb221" />
 <img width="256" height="256" alt="KB3D_IRF_BldgMdMeltingShop_A" src="https://github.com/user-attachments/assets/2c87640a-9aba-49f9-89db-8f833450e2ca" />
