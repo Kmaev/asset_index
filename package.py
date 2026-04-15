@@ -9,5 +9,3 @@ def commands():
     global env
 
     env.PYTHONPATH.append("{root}/python")
-
-

@@ -1,12 +1,12 @@
 import os
+import shutil
 import sys
 from pathlib import Path
-import shutil
 
-def build(source_path:str, build_path:str, install_path:str, targets:list[str]):
+
+def build(source_path: str, build_path: str, install_path: str, targets: list[str]):
     install_path = Path(install_path)
     source_path = Path(source_path)
-
 
     to_copy = {
         source_path / "src": install_path / "python",
@@ -23,6 +23,7 @@ def build(source_path:str, build_path:str, install_path:str, targets:list[str]):
             shutil.copytree(src, dest)
     else:
         print("Package does not build, doing nothing...")
+
 
 if __name__ == '__main__':
     build(
