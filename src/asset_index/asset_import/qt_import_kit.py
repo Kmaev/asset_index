@@ -15,6 +15,8 @@ class QtKitImporter(base_import_kit.BaseKitImporter):
         total = len(assets)
         progress = QtWidgets.QProgressDialog("Generating thumbnails", "Cancel", 0, total)
         progress.setWindowModality(QtCore.Qt.WindowModal)
+        progress.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint, True)
+        progress.setFixedSize(300, 120)
         progress.setMinimumDuration(0)
         try:
             for i, asset in enumerate(assets):

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 
+from asset_index import config
 from asset_index.utils import import_utils
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,10 @@ class BaseKitImporter:
         self.library_path = Path(library_path)
         self.global_asset_catalog = self.library_path / "library_catalog.json"
 
-        self.models_folder = self.library_path / "Models"
+        self.render_config = config.RenderConfig()
+        self.folder_config = config.FolderStructure()
+
+        self.models_folder = self.library_path / self.folder_config.models_path
 
         self.added_new_assets = False
         self.completed = False
@@ -57,7 +61,9 @@ class BaseKitImporter:
                 libraries_list = json.load(f)
         else:
             libraries_list = []
-        libraries_list.append(library)
+        if library not in libraries_list:
+            libraries_list.append(library)
+
         imported_libraries = sorted(libraries_list)
         with open(self.libraries_data_file, "w") as f:
             json.dump(imported_libraries, f, indent=4, default=str)
@@ -85,7 +91,7 @@ class BaseKitImporter:
         processed = 0
 
         for asset_path in self.iterate_with_progress_bar(assets):
-            thumbnail_file = self.get_thumbnail_output_path(asset_path, "png")
+            thumbnail_file = self.get_thumbnail_output_path(asset_path, self.render_config.image.extension)
             if Path(thumbnail_file).exists():
                 processed += 1
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
@@ -198,13 +204,17 @@ class BaseKitImporter:
         Add a basic light rig with a Dome Light.
         """
         _, size, max_dim = self.calculate_bbox_data(stage, "/main")
-        max_dim = max_dim if max_dim < 1.2 else 1.2
+        exposure = self.render_config.lighting.exposure
+        intensity = self.render_config.lighting.intensity
+        exposure_clamp = self.render_config.lighting.exposure_clamp
+        exposure *= max_dim if max_dim < exposure_clamp else exposure_clamp
 
-        hdr = Path(__file__).resolve().parents[3] / "resources" / "belfast_farmhouse_2k.hdr"
+        hdr = self.render_config.lighting.hdr
         dome = UsdLux.DomeLight.Define(stage, "/DomeLight")
 
         dome.CreateTextureFileAttr().Set(str(hdr))
-        dome.CreateIntensityAttr().Set(max_dim)
+        dome.CreateIntensityAttr().Set(intensity)
+        dome.CreateExposureAttr().Set(exposure)
 
     def add_render_camera(self, stage: Usd.Stage):
         """
@@ -215,15 +225,15 @@ class BaseKitImporter:
 
         center, size, max_dim = self.calculate_bbox_data(stage, "/main")
 
-        sensor_width = 36.0
-        focal_length = 50.0
+        sensor_width = self.render_config.camera.sensor_width
+        focal_length = self.render_config.camera.focal_length
 
         field_of_view = 2 * math.atan(sensor_width / (2 * focal_length))
         distance = (max_dim / 2) / math.tan(field_of_view / 2)
-        distance *= 1.3
+        distance *= self.render_config.camera.distance
 
-        azimuth = math.radians(45.0)
-        elevation = math.radians(20.0)
+        azimuth = math.radians(self.render_config.camera.azimuth)
+        elevation = math.radians(self.render_config.camera.elevation)
 
         x = math.cos(elevation) * math.cos(azimuth)
         y = math.sin(elevation)
@@ -248,8 +258,7 @@ class BaseKitImporter:
         camera.CreateHorizontalApertureAttr().Set(sensor_width)
         camera.CreateVerticalApertureAttr().Set(sensor_width)
 
-    @staticmethod
-    def render_usd_stage(usd_file: str, output_img_path: str, remove_usd_file: bool = True):
+    def render_usd_stage(self, usd_file: str, output_img_path: str, remove_usd_file: bool = True):
         """
         Execute render using usdrecord and the Storm renderer. Remove the temporary USD file.
         """
@@ -257,11 +266,11 @@ class BaseKitImporter:
             "usdrecord",
             usd_file,
             output_img_path,
-            "--complexity", "veryhigh",
-            "--colorCorrectionMode", "disabled",
-            "--renderer", "Storm",
+            "--complexity", self.render_config.image.complexity,
+            "--colorCorrectionMode", self.render_config.image.color_correction,
+            "--renderer", self.render_config.image.renderer,
             "--camera", "/Camera",
-            "--imageWidth", "180"
+            "--imageWidth", self.render_config.image.image_width
         ]
         try:
             subprocess.run(cmd, check=True)

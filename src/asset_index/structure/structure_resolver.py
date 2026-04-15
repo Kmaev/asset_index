@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 from asset_index.utils import import_utils
+from asset_index import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,13 +20,10 @@ class LibraryStructureResolver:
         if not self.lib_path.is_dir():
             raise FileNotFoundError("Library directory doesn't exists")
 
-        current_dir = Path(__file__).parent
-        structure_config = current_dir / "structure_config.json"
+        self.structure_config = config.FolderStructure()
 
-        with open(structure_config, "r") as f:
-            config = json.load(f)
-        self.models = self.lib_path / config["models_path"]
-        self.textures = self.lib_path / config["textures_path"]
+        self.models = self.lib_path / self.structure_config.models_path
+        self.textures = self.lib_path / self.structure_config.textures_path
 
     def run_library_validation(self) -> tuple[bool, bool]:
         """Run folder and asset validation checks."""

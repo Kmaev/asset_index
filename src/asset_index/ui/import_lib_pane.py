@@ -85,8 +85,10 @@ class ImportLibrary(QtWidgets.QFrame):
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
             self.enable_import_button()
+            self.display_info_message("Validation completed. Assets are ready for import.")
         else:
             self.enable_edit_button()
+            self.display_info_message("Validation failed. Please fix the asset structure.")
 
     def trigger_validation(self):
         """Reset validation state on library selection change."""
@@ -101,6 +103,7 @@ class ImportLibrary(QtWidgets.QFrame):
     def enable_edit_button(self):
         """Enable edit action."""
         self.edit_lib.setDisabled(False)
+        self.display_info_message("Editing is not yet supported")
 
     def import_library(self):
         """Run library import process."""
@@ -129,3 +132,6 @@ class ImportLibrary(QtWidgets.QFrame):
             self.libraries_view.clearSelection()
             self.libraries_view.setCurrentItem(None)
         QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
+
+    def display_info_message(self, message):
+        QtWidgets.QMessageBox.information(self, "Information", message)
