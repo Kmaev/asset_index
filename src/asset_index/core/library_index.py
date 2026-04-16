@@ -44,4 +44,4 @@ class LibraryIndex:
         else:
             with open(current_lib_path, "r") as f:
                 selected_catalog = json.load(f)
-            return selected_catalog[library]
+            return selected_catalog
