@@ -5,21 +5,23 @@ The goal of this project is to create a tool that works across multiple DCC appl
 Current features include:
 - Asset validation against the expected production pipeline folder structure (basic example; to be extended)
 - Thumbnail rendering
-- Global library asset browsing
+- Houdini integration with asset import 
 
 All rendering and folder structure configurations are defined in `config.py`.
 
-<img width="1470" height="906" alt="image" src="https://github.com/user-attachments/assets/ee43e8a6-6b33-4c9c-9339-090fc1b2a4c1" />
-<img width="1470" height="906" alt="image" src="https://github.com/user-attachments/assets/1a5fca75-c871-4d5b-9b2d-13dc6f370eb8" />
-
-
 A short demo showcasing the current state of development is included below.
+
+Houdini integration and asset import:
+
+https://github.com/user-attachments/assets/e90ed930-c7ea-46c9-a5cd-7f77b00ddcfd
+
+Asset validation and thumbnail rendering:
 
 https://github.com/user-attachments/assets/644b2e78-a3c7-4ce9-ae70-5e5a851bdd4d
 
 ---
 
-One of the core features—now merged into the main branch—is an asset check-in workflow designed for production pipelines. As an example, the project uses a KitBash-style asset library.
+One of the core features—now merged into the main branch—is an asset check-in workflow. As an example, the project uses a KitBash-style asset library.
 
 The check-in process includes:
 - Creating a library metadata catalog
@@ -27,9 +29,7 @@ The check-in process includes:
 - Adding a light rig
 - Computing camera position and rotation based on the asset’s bounding box for thumbnail framing
 - Rendering thumbnails
-
-This process prepares assets for ingestion into both the asset browser and a production pipeline.
-
+  
 ---
 
 Example rendered thumbnails:
