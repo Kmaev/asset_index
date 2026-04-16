@@ -5,7 +5,7 @@ from asset_index import config
 
 class AssetFrame(QtWidgets.QFrame):
     """UI widget displaying an asset thumbnail and name."""
-    assetLoaded = QtCore.Signal(object)
+    load_asset_request = QtCore.Signal(object)
 
     def __init__(self, asset_path, parent=None):
         super(AssetFrame, self).__init__(parent=parent)
@@ -63,4 +63,4 @@ class AssetFrame(QtWidgets.QFrame):
 
     def on_asset_load_clicked(self):
         """Emits assed loaded signal passing the asset path to the main window"""
-        self.assetLoaded.emit(self.asset_path)
+        self.load_asset_request.emit(self.asset_path)

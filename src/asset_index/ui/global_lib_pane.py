@@ -13,7 +13,7 @@ class GlobalLib(QtWidgets.QFrame):
     """UI widget for browsing and importing assets into global library."""
 
     selected_lib_signal = QtCore.Signal(str)
-    assetLoaded = QtCore.Signal(object)
+    load_asset_request = QtCore.Signal(object)
 
     def __init__(self, core_index, parent=None):
         super(GlobalLib, self).__init__(parent=parent)
@@ -119,7 +119,7 @@ class GlobalLib(QtWidgets.QFrame):
         for path in selected_catalog:
             item = QtWidgets.QListWidgetItem()
             widget = asset_label.AssetFrame(Path(path))
-            widget.assetLoaded.connect(self.assetLoaded.emit)
+            widget.load_asset_request.connect(self.load_asset_request.emit)
 
             item.setSizeHint(widget.sizeHint())
             self.assets.addItem(item)

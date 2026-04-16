@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from asset_index.core import library_index, asset_loader
+from asset_index.core import library_index
 from asset_index.ui import global_lib_pane, local_lib_pane
 from asset_index.utils import import_utils
 
@@ -34,7 +34,7 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.local_lib = QtWidgets.QPushButton("Local Library")
 
         self.global_lib_frame = global_lib_pane.GlobalLib(self.core_index)
-        self.global_lib_frame.assetLoaded.connect(self.load_asset)
+        self.global_lib_frame.load_asset_request.connect(self.load_asset)
 
         self.local_lib_frame = local_lib_pane.LocalLib(self.core_index)
 
