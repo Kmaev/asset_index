@@ -61,13 +61,26 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.stack.setCurrentIndex(index)
 
 
-def main():
-    """Run application."""
+app_win = None
+
+
+def show(parent=None):
+    global app_win
+    app_win = AssetIndex(parent=parent)
+    app_win.show()
+    return app_win
+
+
+def show_houdini():
+    import hou
+    global app_win
+    app_win = AssetIndex(parent=hou.qt.mainWindow())
+    app_win.show()
+    return app_win
+
+
+if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     win = AssetIndex()
     win.show()
     app.exec_()
-
-
-if __name__ == '__main__':
-    main()
