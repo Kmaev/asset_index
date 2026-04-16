@@ -98,6 +98,9 @@ QPushButton:disabled:hover {
     background-color: #141414;
 }
 
+QPushButton#asset_button{
+    padding: 1px;
+}
 QSplitter {
     background: transparent;
 }

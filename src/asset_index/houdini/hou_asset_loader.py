@@ -4,14 +4,12 @@ import hou
 
 
 class HouAssetLoader:
-    def __init__(self, asset_path: list[str]):
-        self.asset_path = asset_path
+    def __init__(self):
         self.lop_network = self._get_active_lop_network()
         self.displayed_stage = self._get_display_node()
 
-    def import_assets(self):
-        for asset in self.asset_path:
-            self.create_asset_reference(self.displayed_stage, asset)
+    def import_asset(self, asset):
+        self.create_asset_reference(asset)
 
     @staticmethod
     def _get_active_lop_network():
@@ -24,11 +22,14 @@ class HouAssetLoader:
     def _get_display_node(self):
         display_node = self.lop_network.displayNode()
         if not display_node:
-            raise RuntimeError("No active stage found")
+            return None
         return display_node
 
-    @staticmethod
-    def create_asset_reference(lop_input_node: hou.node, reference_file):
+    def create_asset_reference(self, reference_file):
         node_name = Path(reference_file).stem
-        asset_reference = lop_input_node.createOutputNode("assetreference", node_name)
-        asset_reference.parm("filepath").set(reference_file)
+
+        if self.displayed_stage:
+            asset_reference = self.displayed_stage.createOutputNode("assetreference", node_name)
+        else:
+            asset_reference = self.lop_network.createNode("assetreference", node_name)
+        asset_reference.parm("filepath").set(str(reference_file))
