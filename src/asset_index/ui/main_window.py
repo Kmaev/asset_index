@@ -1,4 +1,3 @@
-from importlib import reload
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -6,8 +5,6 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from asset_index.core import library_index
 from asset_index.ui import global_lib_pane, local_lib_pane
 from asset_index.utils import import_utils
-
-reload(global_lib_pane)
 
 
 class AssetIndex(QtWidgets.QMainWindow):

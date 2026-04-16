@@ -1,12 +1,9 @@
-from importlib import reload
 from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
 from asset_index.asset_import import qt_import_kit
-from asset_index.structure import structure_resolver
-
-reload(structure_resolver)
+from asset_index.core import structure_resolver
 
 
 class ImportLibrary(QtWidgets.QFrame):
@@ -87,7 +84,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
             self.enable_import_button()
-            self.display_info_message("Validation completed. Assets are ready for import.")
+            self.display_info_message("Assets are ready for import.")
         else:
             self.enable_edit_button()
             self.display_info_message("Validation failed. Please fix the asset structure.")

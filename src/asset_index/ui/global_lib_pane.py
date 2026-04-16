@@ -1,12 +1,8 @@
-from importlib import reload
 from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
 from asset_index.ui import asset_label, import_lib_pane
-
-reload(asset_label)
-reload(import_lib_pane)
 
 
 class GlobalLib(QtWidgets.QFrame):
@@ -20,6 +16,7 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.import_library_frame = None
         self.core_index = core_index
+
         self.central_layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.central_layout)
 
@@ -115,16 +112,15 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.assets_stack.setCurrentIndex(0)
         self.assets.clear()
-
-        for path in selected_catalog:
+        ext = selected_catalog["extension"]
+        for path in selected_catalog["assets"]:
             item = QtWidgets.QListWidgetItem()
-            widget = asset_label.AssetFrame(Path(path))
+            widget = asset_label.AssetFrame(Path(path), ext)
             widget.load_asset_request.connect(self.load_asset_request.emit)
 
             item.setSizeHint(widget.sizeHint())
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
-
 
     def on_start_import_clicked(self):
         """Switch to import view."""

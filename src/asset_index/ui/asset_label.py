@@ -1,16 +1,15 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 
-from asset_index import config
-
 
 class AssetFrame(QtWidgets.QFrame):
     """UI widget displaying an asset thumbnail and name."""
+
     load_asset_request = QtCore.Signal(object)
 
-    def __init__(self, asset_path, parent=None):
+    def __init__(self, asset_path, ext, parent=None):
         super(AssetFrame, self).__init__(parent=parent)
-        self.render_config = config.RenderConfig()
         self.asset_path = asset_path
+        self.extension = ext
 
         self.central_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.central_layout)
@@ -24,7 +23,7 @@ class AssetFrame(QtWidgets.QFrame):
         self.label_layout.setContentsMargins(0, 0, 0, 0)
         self.label_widget.setLayout(self.label_layout)
 
-        path = str(self.asset_path.with_suffix(f".{self.render_config.image.extension}"))
+        path = str(self.asset_path.with_suffix(self.extension))
         pixmap = QtGui.QPixmap(path)
 
         self.image_label = QtWidgets.QLabel()
