@@ -45,7 +45,7 @@ class ImageSettings:
     color_correction: str = "disabled"
     renderer: str = "Storm"
     complexity: str = "veryhigh"
-    extension: str = "png"
+    extension: str = ".png"
 
 
 @dataclass
