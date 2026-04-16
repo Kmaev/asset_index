@@ -3,8 +3,8 @@ import logging
 import math
 import subprocess
 import tempfile
-from collections import defaultdict
 from collections.abc import Iterator
+from dataclasses import dataclass, asdict
 from pathlib import Path
 
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
@@ -16,13 +16,20 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+@dataclass()
+class LibraryData:
+    """Container for library asset data."""
+    assets: list
+    extension: str
+
+
 class BaseKitImporter:
     """
     Base class for importing KitBash asset libraries into a production pipeline.
     For each USD asset, creates a temporary render file, computes the asset’s bounding box,
     and uses it to set up and position a render camera. Adds a basic light rig
     and generates a thumbnail using usdrecord.
-    Updates the global library metadata file with the library key and asset paths.
+    Updates the library metadata file.
     """
 
     def __init__(self, library_path: str):
@@ -30,7 +37,9 @@ class BaseKitImporter:
         self.libraries_data_file = self.global_asset_lib / "libraries.json"
 
         self.library_path = Path(library_path)
-        self.global_asset_catalog = self.library_path / "library_catalog.json"
+        self.library_name = self.library_path.name
+
+        self.library_catalog_file = self.library_path / "library_catalog.json"
 
         self.render_config = config.RenderConfig()
         self.folder_config = config.FolderStructure()
@@ -45,38 +54,25 @@ class BaseKitImporter:
         """Run the full import: build the library catalog, render thumbnails, and update global metadata."""
         library_catalog = self.create_library_catalog()
 
-        library_name = self.library_path.name
-        assets = library_catalog[library_name]
-        self.render_thumbnails(assets)
+        self.render_thumbnails(library_catalog.assets)
+
         if self.completed and self.added_new_assets:
-            self.update_global_library_index(library_catalog)
-            self.update_imported_libraries_index(library_name)
+            _converted_lib = asdict(library_catalog)
+            _converted_lib["assets"] = [str(p) for p in _converted_lib["assets"]]
 
-    def update_imported_libraries_index(self, library: str) -> None:
-        """Add a library into an imported library metadata file."""
-        if self.libraries_data_file.exists():
-            with open(self.libraries_data_file, "r") as f:
-                libraries_list = json.load(f)
-        else:
-            libraries_list = []
-        if library not in libraries_list:
-            libraries_list.append(library)
+            self.update_library_index(_converted_lib)
+            self.update_imported_libraries_index(self.library_name)
 
-        imported_libraries = sorted(libraries_list)
-        with open(self.libraries_data_file, "w") as f:
-            json.dump(imported_libraries, f, indent=4, default=str)
-
-    def create_library_catalog(self) -> dict[str, list[Path]]:
-        """Map library path to a list of USD asset files."""
-        library_catalog = defaultdict(list)
-        library_name = self.library_path.name
+    def create_library_catalog(self) -> LibraryData:
+        """Collect USD asset files from the models directory and return them as a LibraryData instance."""
+        _assets = []
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
                 if asset_folder.is_dir():
                     for file in asset_folder.iterdir():
                         if asset_folder.name in file.name and "usd" in file.suffix:
-                            library_catalog[library_name].append(file)
-        return library_catalog
+                            _assets.append(file)
+        return LibraryData(assets=_assets, extension=self.render_config.image.extension)
 
     def render_thumbnails(self, assets: list[Path]) -> None:
         """Render thumbnails for USD assets by creating a temporary stage."""
@@ -86,7 +82,7 @@ class BaseKitImporter:
 
         for asset_path in self.iterate_with_progress_bar(assets):
             thumbnail_file = self.get_thumbnail_output_path(asset_path, self.render_config.image.extension)
-            if Path(thumbnail_file).exists():
+            if thumbnail_file.exists():
                 processed += 1
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
                 continue
@@ -114,31 +110,10 @@ class BaseKitImporter:
 
             yield asset
 
-    def update_global_library_index(self, library_catalog: dict[str, list[Path]]):
-        """Sync a library catalog into the global metadata file."""
-        if self.global_asset_catalog.exists():
-            with open(self.global_asset_catalog, "r") as f:
-                library_data = json.load(f)
-
-        else:
-            library_data = {}
-
-        _converted_lib = import_utils.ImportUtils.path_to_str(library_catalog)
-        for key, val in _converted_lib.items():
-            if key in library_data:
-                _library_data_set = set(library_data[key])
-                _library_data_set.update(val)
-                library_data[key] = sorted(list(_library_data_set))
-            else:
-                library_data[key] = sorted(val)
-
-        with open(self.global_asset_catalog, "w") as f:
-            json.dump(library_data, f, indent=4, default=str)
-
     @staticmethod
     def get_thumbnail_output_path(usd_file_path: Path, ext: str) -> Path:
         """Generate the thumbnail path by replacing the USD file extension with the specified extension."""
-        return usd_file_path.with_suffix(f".{ext}")
+        return usd_file_path.with_suffix(ext)
 
     def create_temp_usd_render_stage(self, usd_file_path: Path) -> Path:
         """
@@ -259,3 +234,23 @@ class BaseKitImporter:
         finally:
             if remove_usd_file:
                 Path(usd_file).unlink(missing_ok=True)
+
+    def update_library_index(self, library_catalog: dict):
+        """Update library data catalog"""
+        with open(self.library_catalog_file, "w") as f:
+            json.dump(library_catalog, f, indent=4)
+
+    def update_imported_libraries_index(self, library: str) -> None:
+        """Add a library into an imported library metadata file."""
+        if self.libraries_data_file.exists():
+            with open(self.libraries_data_file, "r") as f:
+                libraries_list = json.load(f)
+        else:
+            libraries_list = []
+
+        if library not in libraries_list:
+            libraries_list.append(library)
+
+        imported_libraries = sorted(libraries_list)
+        with open(self.libraries_data_file, "w") as f:
+            json.dump(imported_libraries, f, indent=4, default=str)
