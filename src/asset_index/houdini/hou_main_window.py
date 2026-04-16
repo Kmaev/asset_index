@@ -1,20 +1,22 @@
-from importlib import reload
-
 from asset_index.houdini import hou_asset_loader
 from asset_index.ui import main_window
 
-reload(main_window)
-reload(hou_asset_loader)
-
 
 class HouMainWindow(main_window.AssetIndex):
+    """
+    Houdini-specific implementation of the AssetIndex UI.
+
+    Extends the base AssetIndex window by integrating Houdini asset loading
+    functionality via HouAssetLoader.
+    """
+
     def __init__(self, parent):
         super(HouMainWindow, self).__init__(parent=parent)
 
         self.asset_loader = hou_asset_loader.HouAssetLoader()
 
     def load_asset(self, asset_path):
-        self.asset_loader.import_asset(asset_path)
+        self.asset_loader.create_asset_reference(asset_path)
 
 
 app_win = None
