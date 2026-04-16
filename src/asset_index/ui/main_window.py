@@ -1,10 +1,13 @@
+from importlib import reload
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from asset_index.core import library_index
+from asset_index.core import library_index, asset_loader
 from asset_index.ui import global_lib_pane, local_lib_pane
 from asset_index.utils import import_utils
+
+reload(global_lib_pane)
 
 
 class AssetIndex(QtWidgets.QMainWindow):
@@ -31,6 +34,8 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.local_lib = QtWidgets.QPushButton("Local Library")
 
         self.global_lib_frame = global_lib_pane.GlobalLib(self.core_index)
+        self.global_lib_frame.assetLoaded.connect(self.load_asset)
+
         self.local_lib_frame = local_lib_pane.LocalLib(self.core_index)
 
         _widgets = [[self.global_lib, self.global_lib_frame],
@@ -60,6 +65,10 @@ class AssetIndex(QtWidgets.QMainWindow):
         index = button.property('stack-index')
         self.stack.setCurrentIndex(index)
 
+    def load_asset(self, asset_path):
+        """Each DCC should implement asset loading functionality according to its requirements."""
+        pass
+
 
 app_win = None
 
@@ -67,14 +76,6 @@ app_win = None
 def show(parent=None):
     global app_win
     app_win = AssetIndex(parent=parent)
-    app_win.show()
-    return app_win
-
-
-def show_houdini():
-    import hou
-    global app_win
-    app_win = AssetIndex(parent=hou.qt.mainWindow())
     app_win.show()
     return app_win
 
