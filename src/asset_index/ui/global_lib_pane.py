@@ -38,15 +38,11 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets = QtWidgets.QListWidget()
         self.assets.setViewMode(QtWidgets.QListView.IconMode)
         self.assets.setResizeMode(QtWidgets.QListView.Adjust)
-        self.assets.setWrapping(True)
-        self.assets.setMinimumWidth(150)
-        self.assets.setIconSize(QtCore.QSize(150, 150))
+        self.assets.setIconSize(QtCore.QSize(200, 200))
 
         self.assets.setMovement(QtWidgets.QListView.Static)
         self.assets.setUniformItemSizes(True)
         self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.assets.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.assets.setMinimumSize(10, 10)
         self.assets.mousePressEvent = self._list_mouse_press_event
 
         self.assets_stack.addWidget(self.assets)
@@ -59,7 +55,7 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets_stack.addWidget(self.library_not_imported_frame)
 
         self.library_not_imported = QtWidgets.QLineEdit()
-        self.library_not_imported.setText("No assets found. Import the library to get started.")
+        self.library_not_imported.setText("No assets found. Import a library to get started.")
         self.library_not_imported.setAlignment(QtCore.Qt.AlignCenter)
         self.library_not_imported_layout.addWidget(self.library_not_imported)
 
@@ -107,7 +103,6 @@ class GlobalLib(QtWidgets.QFrame):
 
         if not selected_catalog:
             self.assets_stack.setCurrentIndex(1)
-            self.selected_lib_signal.emit(selected)
             return
 
         self.assets_stack.setCurrentIndex(0)
@@ -124,6 +119,8 @@ class GlobalLib(QtWidgets.QFrame):
 
     def on_start_import_clicked(self):
         """Switch to import view."""
+        selected = self.get_selection(self.libraries).text()
+        self.selected_lib_signal.emit(selected)
         self.assets_stack.setCurrentIndex(2)
 
     def on_library_imported(self):

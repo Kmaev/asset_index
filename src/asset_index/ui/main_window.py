@@ -27,6 +27,7 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.stack = QtWidgets.QStackedWidget()
         self.central_layout.addWidget(self.stack)
 
+        #Add Global and Local Library Buttons
         self.global_lib = QtWidgets.QPushButton("Global Library")
         self.local_lib = QtWidgets.QPushButton("Local Library")
 
@@ -43,6 +44,12 @@ class AssetIndex(QtWidgets.QMainWindow):
             button.setProperty('stack-index', i)
 
             button.clicked.connect(self.on_button_clicked)
+
+        # Add Import Library Button
+        self.import_library = QtWidgets.QPushButton("Import Library")
+        self.button_layout.addWidget(self.import_library)
+        self.import_library.clicked.connect(self.global_lib_frame.on_start_import_clicked)
+        self.import_library.clicked.connect(self.global_lib_frame.on_start_import_clicked)
 
         style_file = Path(__file__).resolve().parents[3] / "resources" / "style.qss"
         style = ""

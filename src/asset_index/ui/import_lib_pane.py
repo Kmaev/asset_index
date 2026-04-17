@@ -31,8 +31,8 @@ class ImportLibrary(QtWidgets.QFrame):
         self.libraries_view = QtWidgets.QTreeWidget()
         self.splitter.addWidget(self.libraries_view)
         self.libraries_view.setHeaderLabel("Library Content")
-        self.libraries_view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.libraries_view.setMinimumWidth(100)
+        self.libraries_view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.libraries_view.mousePressEvent = self._tree_mouse_press_event
 
         self.library_data = QtWidgets.QWidget()
@@ -52,7 +52,6 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.edit_lib = QtWidgets.QPushButton("Edit")
         self.buttons_group_layout.addWidget(self.edit_lib)
-        self.edit_lib.setDisabled(True)
 
         self.import_lib = QtWidgets.QPushButton("Import")
         self.buttons_group_layout.addWidget(self.import_lib)
@@ -83,25 +82,18 @@ class ImportLibrary(QtWidgets.QFrame):
         st = structure_resolver.LibraryStructureResolver(self.library)
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
-            self.enable_import_button()
             self.display_info_message("Assets are ready for import.")
         else:
-            self.enable_edit_button()
             self.display_info_message("Validation failed. Please fix the asset structure.")
 
     def trigger_validation(self):
         """Reset validation state on library selection change."""
         self.import_lib.setDisabled(True)
-        self.edit_lib.setDisabled(True)
         self.validation_passed = False
 
     def enable_import_button(self):
         """Enable import action."""
         self.import_lib.setDisabled(False)
-
-    def enable_edit_button(self):
-        """Enable edit action."""
-        self.edit_lib.setDisabled(False)
 
     def on_import_clicked(self):
         """Run library import process."""
