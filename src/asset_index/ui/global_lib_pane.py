@@ -42,7 +42,7 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.assets.setMovement(QtWidgets.QListView.Static)
         self.assets.setUniformItemSizes(True)
-        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.assets.mousePressEvent = self._list_mouse_press_event
 
         self.assets_stack.addWidget(self.assets)
