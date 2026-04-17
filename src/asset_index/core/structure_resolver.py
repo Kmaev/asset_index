@@ -34,8 +34,7 @@ class LibraryStructureResolver:
 
     def validate_folder_structure(self) -> bool:
         """Check required directory structure exists."""
-        required = (self.models, self.textures)
-        return all(folder.is_dir() for folder in required)
+        return self.models.is_dir()
 
     def validate_asset_structure(self) -> bool:
         """Check asset folder structure is correct and contains USD file."""
