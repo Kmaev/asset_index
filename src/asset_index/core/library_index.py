@@ -10,8 +10,8 @@ class LibraryIndex:
 
     def __init__(self):
         self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
-        self.libraries_data_file = self.global_asset_lib / "libraries.json"
-
+        self.all_libraries_data_file = self.global_asset_lib / "libraries.json"
+        self.library_catalog_file_name = "library_catalog.json"
         self._all_libraries = None
 
     def list_all_libraries(self) -> list:
@@ -24,7 +24,9 @@ class LibraryIndex:
 
     def list_imported_libraries(self) -> list:
         """Return libraries registered in the global metadata file."""
-        with open(self.libraries_data_file, "r") as f:
+        if not self.all_libraries_data_file.is_file():
+            return []
+        with open(self.all_libraries_data_file, "r") as f:
             libraries_list = json.load(f)
         imported_libraries = sorted(libraries_list)
         return imported_libraries
@@ -38,7 +40,7 @@ class LibraryIndex:
 
     def load_library_catalog(self, library) -> Any | None:
         """Load catalog data for a given library."""
-        current_lib_path = self.global_asset_lib / f"{library}/library_catalog.json"
+        current_lib_path = self.global_asset_lib / library / self.library_catalog_file_name
         if not current_lib_path.is_file():
             return None
         else:

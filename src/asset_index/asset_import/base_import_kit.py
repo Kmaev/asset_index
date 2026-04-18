@@ -4,23 +4,22 @@ import math
 import subprocess
 import tempfile
 from collections.abc import Iterator
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 
 from asset_index import config
-from asset_index.utils import import_utils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-@dataclass()
+@dataclass
 class LibraryData:
     """Container for library asset data."""
-    assets: list
-    extension: str
+    assets: list = field(default_factory=list)
+    extension: str = ".png"
 
 
 class BaseKitImporter:
@@ -32,23 +31,36 @@ class BaseKitImporter:
     Updates the library metadata file.
     """
 
-    def __init__(self, library_path: str):
-        self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
-        self.libraries_data_file = self.global_asset_lib / "libraries.json"
-
-        self.library_path = Path(library_path)
-        self.library_name = self.library_path.name
-
-        self.library_catalog_file = self.library_path / "library_catalog.json"
+    def __init__(self, core_index, library: str):
+        self.core_index = core_index
+        self.library_name = library
 
         self.render_config = config.RenderConfig()
         self.folder_config = config.FolderStructure()
 
+        self.all_libraries_data_file = self.core_index.all_libraries_data_file
+        self.all_imported_libraries = self.core_index.list_imported_libraries()
+
+        self.library_path = self.core_index.global_asset_lib / library
         self.models_folder = self.library_path / self.folder_config.models_path
+
+        self.library_catalog = self.core_index.load_library_catalog(self.library_name)
+        self.existing_library_data = self.map_existing_library_catalog(self.library_catalog)
 
         self.added_new_assets = False
         self.completed = False
         self.interrupted = False
+
+    @staticmethod
+    def map_existing_library_catalog(library_catalog: dict | None) -> LibraryData:
+        """Map JSON library catalog data to a LibraryData instance."""
+        if library_catalog:
+            existing_library_data = LibraryData(**library_catalog)
+            if existing_library_data.assets:
+                existing_library_data.assets = [Path(asset) for asset in existing_library_data.assets]
+            return existing_library_data
+        else:
+            return LibraryData()
 
     def import_library(self) -> None:
         """Run the full import: build the library catalog, render thumbnails, and update global metadata."""
@@ -82,7 +94,7 @@ class BaseKitImporter:
 
         for asset_path in self.iterate_with_progress_bar(assets):
             thumbnail_file = self.get_thumbnail_output_path(asset_path, self.render_config.image.extension)
-            if thumbnail_file.exists():
+            if thumbnail_file.exists() and asset_path in self.existing_library_data.assets:
                 processed += 1
                 logger.info(f"Thumbnail exists: {str(thumbnail_file)}")
                 continue
@@ -237,20 +249,15 @@ class BaseKitImporter:
 
     def update_library_index(self, library_catalog: dict):
         """Update library data catalog"""
-        with open(self.library_catalog_file, "w") as f:
+        library_catalog_file_path = self.library_path / self.core_index.library_catalog_file_name
+        with open(library_catalog_file_path, "w") as f:
             json.dump(library_catalog, f, indent=4)
 
     def update_imported_libraries_index(self, library: str) -> None:
         """Add a library into an imported library metadata file."""
-        if self.libraries_data_file.exists():
-            with open(self.libraries_data_file, "r") as f:
-                libraries_list = json.load(f)
-        else:
-            libraries_list = []
+        if library not in self.all_imported_libraries:
+            self.all_imported_libraries.append(library)
 
-        if library not in libraries_list:
-            libraries_list.append(library)
-
-        imported_libraries = sorted(libraries_list)
-        with open(self.libraries_data_file, "w") as f:
+        imported_libraries = sorted(self.all_imported_libraries)
+        with open(self.core_index.all_libraries_data_file, "w") as f:
             json.dump(imported_libraries, f, indent=4, default=str)
