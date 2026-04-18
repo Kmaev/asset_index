@@ -42,9 +42,9 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets.setIconSize(QtCore.QSize(200, 200))
 
         self.assets.setMovement(QtWidgets.QListView.Static)
-        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-
+        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.assets.mousePressEvent = self._list_mouse_press_event
+        self.assets.setObjectName("assets")
 
         self.assets_stack.addWidget(self.assets)
 
