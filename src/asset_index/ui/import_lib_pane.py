@@ -83,6 +83,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
             self.display_info_message("Assets are ready for import.")
+            self.import_lib.setDisabled(False)
         else:
             self.display_info_message("Validation failed. Please fix the asset structure.")
 
@@ -97,7 +98,7 @@ class ImportLibrary(QtWidgets.QFrame):
 
     def on_import_clicked(self):
         """Run library import process."""
-        import_lib = qt_import_kit.QtKitImporter(str(self.library_path))
+        import_lib = qt_import_kit.QtKitImporter(self.core_index, str(self.library))
         import_lib.import_library()
 
         if not import_lib.completed:
