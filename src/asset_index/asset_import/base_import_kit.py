@@ -84,6 +84,7 @@ class BaseKitImporter:
                     for file in asset_folder.iterdir():
                         if asset_folder.name in file.name and "usd" in file.suffix:
                             _assets.append(file)
+        _assets = sorted(_assets)
         return LibraryData(assets=_assets, extension=self.render_config.image.extension)
 
     def render_thumbnails(self, assets: list[Path]) -> None:

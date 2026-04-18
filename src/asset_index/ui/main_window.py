@@ -4,7 +4,6 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from asset_index.core import library_index
 from asset_index.ui import global_lib_pane, local_lib_pane
-from asset_index.utils import import_utils
 
 
 class AssetIndex(QtWidgets.QMainWindow):
@@ -12,8 +11,6 @@ class AssetIndex(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         super(AssetIndex, self).__init__(parent=parent)
-
-        self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
         self.core_index = library_index.LibraryIndex()
 
         self.resize(1500, 900)
@@ -27,7 +24,7 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.stack = QtWidgets.QStackedWidget()
         self.central_layout.addWidget(self.stack)
 
-        #Add Global and Local Library Buttons
+        # Add Global and Local Library Buttons
         self.global_lib = QtWidgets.QPushButton("Global Library")
         self.local_lib = QtWidgets.QPushButton("Local Library")
 

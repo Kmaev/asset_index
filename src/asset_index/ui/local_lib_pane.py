@@ -18,6 +18,7 @@ class LocalLib(QtWidgets.QFrame):
 
     def add_message(self, message):
         not_implemented = QtWidgets.QLineEdit()
+        not_implemented.setEnabled(False)
         not_implemented.setText(message)
         not_implemented.setAlignment(QtCore.Qt.AlignCenter)
         not_implemented.setAttribute(QtCore.Qt.WA_TranslucentBackground)

@@ -36,13 +36,14 @@ class GlobalLib(QtWidgets.QFrame):
         self.splitter.addWidget(self.assets_stack)
 
         self.assets = QtWidgets.QListWidget()
+        self.assets.setMinimumSize(500, 500)
         self.assets.setViewMode(QtWidgets.QListView.IconMode)
         self.assets.setResizeMode(QtWidgets.QListView.Adjust)
         self.assets.setIconSize(QtCore.QSize(200, 200))
 
         self.assets.setMovement(QtWidgets.QListView.Static)
-        self.assets.setUniformItemSizes(True)
         self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
         self.assets.mousePressEvent = self._list_mouse_press_event
 
         self.assets_stack.addWidget(self.assets)
@@ -113,7 +114,7 @@ class GlobalLib(QtWidgets.QFrame):
             widget = asset_label.AssetFrame(Path(path), ext)
             widget.load_asset_request.connect(self.load_asset_request.emit)
 
-            item.setSizeHint(widget.sizeHint())
+            item.setSizeHint(QtCore.QSize(200, 200))
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
 

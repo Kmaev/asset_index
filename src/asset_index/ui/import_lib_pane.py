@@ -50,9 +50,6 @@ class ImportLibrary(QtWidgets.QFrame):
         self.validate_lib = QtWidgets.QPushButton("Validate")
         self.buttons_group_layout.addWidget(self.validate_lib)
 
-        self.edit_lib = QtWidgets.QPushButton("Edit")
-        self.buttons_group_layout.addWidget(self.edit_lib)
-
         self.import_lib = QtWidgets.QPushButton("Import")
         self.buttons_group_layout.addWidget(self.import_lib)
         self.import_lib.setDisabled(True)
@@ -61,7 +58,6 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.validate_lib.clicked.connect(self.validate)
         self.import_lib.clicked.connect(self.on_import_clicked)
-        self.edit_lib.clicked.connect(self.on_edit_clicked)
 
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
 
@@ -79,7 +75,7 @@ class ImportLibrary(QtWidgets.QFrame):
 
     def validate(self):
         """Validate selected library folder structure."""
-        st = structure_resolver.LibraryStructureResolver(self.library)
+        st = structure_resolver.LibraryStructureResolver(self.core_index, self.library)
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
             self.display_info_message("Assets are ready for import.")
@@ -107,10 +103,6 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.update_global_lib.emit()
         self.libraries_view.clear()
-
-    def on_edit_clicked(self):
-        """Placeholder, display not implemented message."""
-        self.display_info_message("Editing is not yet supported")
 
     def set_library(self, library: str):
         """Set currently selected library and populate view."""

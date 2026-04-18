@@ -12,7 +12,6 @@ class FolderStructure:
     with the directory name matching the name of the corresponding USD file.
     """
     models_path: str = "Models"
-    textures_path: str = "Textures"
 
 
 @dataclass
