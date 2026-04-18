@@ -13,7 +13,9 @@ class AssetFrame(QtWidgets.QFrame):
 
         self.central_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.central_layout)
+        self.setFixedSize(200, 200)
         self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_layout.setAlignment(QtCore.Qt.AlignCenter)
 
         self.label_widget = QtWidgets.QWidget()
         self.label_widget.setAttribute(QtCore.Qt.WA_TranslucentBackground)
@@ -22,6 +24,7 @@ class AssetFrame(QtWidgets.QFrame):
         self.label_layout = QtWidgets.QVBoxLayout()
         self.label_layout.setContentsMargins(0, 0, 0, 0)
         self.label_widget.setLayout(self.label_layout)
+        self.label_layout.setAlignment(QtCore.Qt.AlignCenter)
 
         path = str(self.asset_path.with_suffix(self.extension))
         pixmap = QtGui.QPixmap(path)
@@ -48,7 +51,7 @@ class AssetFrame(QtWidgets.QFrame):
         self.label = QtWidgets.QLabel()
 
         self.label.setText(self.asset_path.stem)
-        self.label.setAlignment(QtCore.Qt.AlignLeft)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("asset_label_text")
 
         self.central_layout.addWidget(self.label)
