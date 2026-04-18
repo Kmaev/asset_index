@@ -22,7 +22,7 @@ class LibraryIndex:
 
         return self._all_libraries
 
-    def list_imported_libraries(self) -> list:
+    def list_imported_libraries(self) -> list | None:
         """Return libraries registered in the global metadata file."""
         if not self.all_libraries_data_file.is_file():
             return []
