@@ -1,18 +1,25 @@
 import json
+import os
 from pathlib import Path
 from typing import Any
-
-from asset_index.utils import import_utils
 
 
 class LibraryIndex:
     """Class to manage asset library indexing and metadata."""
 
     def __init__(self):
-        self.global_asset_lib = Path(import_utils.ImportUtils.get_env_var("GLOBAL_ASSET_LIB"))
+        self.global_asset_lib = Path(self.get_env_var("GLOBAL_ASSET_LIB"))
         self.all_libraries_data_file = self.global_asset_lib / "libraries.json"
         self.library_catalog_file_name = "library_catalog.json"
         self._all_libraries = None
+
+    @staticmethod
+    def get_env_var(env_var: str) -> str:
+        """Return the value of the given environment variable."""
+        try:
+            return os.environ[env_var]
+        except KeyError:
+            raise EnvironmentError(f"Environment variable '{env_var}' not found.")
 
     def list_all_libraries(self) -> list:
         """Return all library folder names. Searches the file system."""

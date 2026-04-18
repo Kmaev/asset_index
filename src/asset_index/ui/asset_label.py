@@ -45,15 +45,11 @@ class AssetFrame(QtWidgets.QFrame):
         self.functions_layout.addWidget(self.load)
         self.load.setObjectName("asset_button")
 
-        self.info = QtWidgets.QPushButton("?")
-        self.info.setFixedSize(30, 20)
-        self.functions_layout.addWidget(self.info)
-        self.info.setObjectName("asset_button")
-
         self.label = QtWidgets.QLabel()
 
         self.label.setText(self.asset_path.stem)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setAlignment(QtCore.Qt.AlignLeft)
+        self.label.setObjectName("asset_label_text")
 
         self.central_layout.addWidget(self.label)
         self.image_label.setAttribute(QtCore.Qt.WA_TranslucentBackground)

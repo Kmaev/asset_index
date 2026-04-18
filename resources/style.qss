@@ -13,6 +13,10 @@ QFrame {
     border: none;
 }
 
+QLabel#asset_label_text{
+    font-size: 10px;
+}
+
 QLineEdit {
     background-color: transparent;
     border: none;
