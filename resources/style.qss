@@ -29,15 +29,6 @@ QLineEdit {
     border: none;
 }
 
-QLabel#asset_label_text{
-    font-size: 10px;
-}
-
-QLineEdit {
-    background-color: transparent;
-    border: none;
-}
-
 QListWidget {
     background-color: #181818;
     border: 1px solid #141414;

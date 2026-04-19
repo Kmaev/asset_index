@@ -24,7 +24,7 @@ class LibraryData:
 
 class BaseKitImporter:
     """
-    Base class for importing KitBash asset libraries into a production pipeline.
+    Base class for importing asset libraries into a production pipeline.
     For each USD asset, creates a temporary render file, computes the asset’s bounding box,
     and uses it to set up and position a render camera. Adds a basic light rig
     and generates a thumbnail using usdrecord.

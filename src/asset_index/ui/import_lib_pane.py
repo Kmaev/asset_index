@@ -81,12 +81,20 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.validation_passed = False
 
-        self.validate_lib.clicked.connect(self.validate)
+        self.validate_lib.clicked.connect(self.on_validate_clicked)
         self.import_lib.clicked.connect(self.on_import_clicked)
+
         self.create_asset.clicked.connect(self.on_create_asset_clicked)
         self.group_with_variants.clicked.connect(self.on_group_variant_clicked)
-
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
+
+    def set_library(self, library: str):
+        """Set currently selected library and trigger populate library content view."""
+        self.libraries_view.clear()
+        self.library = library
+        self.library_path = self.core_index.global_asset_lib / self.library
+        self.populate_libraries_view(self.library_path, self.libraries_view)
+        self.trigger_validation()
 
     def populate_libraries_view(self, root: Path, parent_item):
         """Populate tree view with library content."""
@@ -100,28 +108,30 @@ class ImportLibrary(QtWidgets.QFrame):
             if "usd" in folder.suffix and folder.is_file():
                 metadata = {"usd_file": str(folder)}
                 item.setData(0, QtCore.Qt.UserRole, metadata)
+            else:
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
             if folder.is_dir():
                 self.populate_libraries_view(folder, item)
 
     def _reload_libraries_view(self):
-        """Helper method to reload library view"""
+        """Helper to reload the libraries view."""
         self.libraries_view.clear()
         self.populate_libraries_view(self.library_path, self.libraries_view)
-
-    def validate(self):
-        """Validate selected library folder structure."""
-        st = structure_resolver.LibraryStructureResolver(self.core_index, self.library)
-        self.validation_passed = all(st.run_library_validation())
-        if self.validation_passed:
-            self._display_info_message("Information", "Assets are ready for import.")
-            self.import_lib.setDisabled(False)
-        else:
-            self._display_warning_message("Validation failed.", "Validation failed. Please fix the asset structure.")
 
     def trigger_validation(self):
         """Reset validation state on library selection change."""
         self.import_lib.setDisabled(True)
         self.validation_passed = False
+
+    def on_validate_clicked(self):
+        """Validate selected library folder structure."""
+        st = structure_resolver.LibraryStructureResolver(self.core_index, self.library)
+        self.validation_passed = all(st.run_library_validation())
+        if self.validation_passed:
+            QtWidgets.QMessageBox.information(self, "Information", "Assets are ready for import.")
+            self.import_lib.setDisabled(False)
+        else:
+            self._display_warning_message("Validation failed.", "Validation failed. Please fix the asset structure.")
 
     def enable_import_button(self):
         """Enable import action."""
@@ -139,14 +149,6 @@ class ImportLibrary(QtWidgets.QFrame):
         self.update_global_lib.emit()
         self.libraries_view.clear()
 
-    def set_library(self, library: str):
-        """Set currently selected library and populate view."""
-        self.libraries_view.clear()
-        self.library = library
-        self.library_path = self.core_index.global_asset_lib / self.library
-        self.populate_libraries_view(self.library_path, self.libraries_view)
-        self.trigger_validation()
-
     def _tree_mouse_press_event(self, event):
         """Clear selection on empty-space click."""
         item = self.libraries_view.itemAt(event.pos())
@@ -156,56 +158,63 @@ class ImportLibrary(QtWidgets.QFrame):
             self.libraries_view.setCurrentItem(None)
         QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
 
-    def start_editor(self):
+    def _start_editor(self):
         if not self.editor:
             self.editor = editor.AssetEditor(self.core_index, self.library)
 
     def on_create_asset_clicked(self):
-        """Wrap a spare usd file into folder with the  same name as a usd file"""
-        self.start_editor()
+        """Wrap selected USD files into folders named after each file."""
+        selected = self.libraries_view.selectedItems()
+        if not selected:
+            self._display_warning_message("Invalid Selection",
+                                          "Please select USD files.")
 
-        usd_list = self._get_usd_files_list(self.libraries_view)
+        usd_list = self._get_usd_files_list(selected)
 
-        self.editor.create_assets(usd_list)
+        self._start_editor()
+        errored_files = self.editor.create_assets(usd_list)
+
+        if errored_files:
+            msg = "\n".join(file for file in errored_files)
+            self._display_warning_message("Asset Exists",
+                                          f"Please select only USD files that does not structured correctly."
+                                          f"\nSkipped:\n{msg}")
 
         self._reload_libraries_view()
 
     def on_group_variant_clicked(self):
-        self.start_editor()
-
+        """
+        Group selected USD files into a single asset with variants.
+        Ensures all selected files belong to the same directory before
+        building a variant set.
+        """
         selected = self.libraries_view.selectedItems()
-
-        first_parent = selected[0].parent()
-
-        if first_parent is None:
+        if not selected:
             self._display_warning_message("Invalid Selection",
-                                          "Please select usd files from the same folder.")
+                                          "Please select only USD files from the same folder.")
             return
+        first_parent = selected[0].parent()
 
         if not all(item.parent() == first_parent for item in selected):
             self._display_warning_message("Invalid Selection",
-                                          "Please select usd files from the same folder.")
+                                          "Variant USD files must be selected from the same folder.")
             return
-        usd_files = self._get_usd_files_list(self.libraries_view)
 
+        usd_files = self._get_usd_files_list(selected)
+
+        self._start_editor()
         self.editor.create_asset_with_variant(usd_files)
-
         self._reload_libraries_view()
 
-    def _get_usd_files_list(self, widget):
+    def _get_usd_files_list(self, selected):
+        """Return a list of USD file paths extracted from the selected items' metadata."""
         usd_list = []
-        for item in widget.selectedItems():
+        for item in selected:
             metadata = item.data(0, QtCore.Qt.UserRole)
-            if not metadata:
-                self._display_warning_message("Invalid Selection", f"{item.text(0)} is not a USD file")
-                continue
             usd_file = metadata.get("usd_file")
             usd_list.append(usd_file)
         return usd_list
 
     def _display_warning_message(self, title, message):
+        """Display a warning message dialog with the given title and message."""
         QtWidgets.QMessageBox.warning(self, title, message)
-
-    def _display_info_message(self, title, message):
-        """Helper, displays information message."""
-        QtWidgets.QMessageBox.information(self, title, message)
