@@ -13,7 +13,7 @@ All rendering and folder structure configurations are defined in `config.py`.
 
 A short demo showcasing the current state of development is included below.
 
-https://github.com/user-attachments/assets/19722c3f-bac3-4c89-a531-e2a88e262431
+https://github.com/user-attachments/assets/eb0cb7b3-b052-468e-a7a9-a993532e1b8e
 
 ---
 
@@ -46,19 +46,3 @@ Example rendered thumbnails:
 <img width="256" height="256" alt="KB3D_IRF_PropFireBowl_B" src="https://github.com/user-attachments/assets/7f030252-cd3b-42da-99d0-894a5fda626a" />
 <img width="256" height="256" alt="KB3D_IRF_PropTrainHook_A" src="https://github.com/user-attachments/assets/6b29a352-de61-494e-8467-b62ab86bef75" />
 <img width="256" height="256" alt="KB3D_IRF_PropLamp_A" src="https://github.com/user-attachments/assets/a427e664-7802-4f77-9dcc-1443d4e06cf4" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
