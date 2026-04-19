@@ -1,13 +1,21 @@
-This repository contains a USD asset browser, a personal project currently in development.
+This repository contains a prototype of a USD Asset Browser currently in development.
 
-The goal of this project is to create a tool that works across multiple DCC applications, enabling asset import into a USD stage.
+It is designed for managing USD assets, with folder structure validation and import into a production pipeline.
 
-Current features include:
+Imported libraries can then be brought into a USD stage across different DCCs. In this example, I’m using Houdini, and in standalone mode it simply opens files in usdview.
+
+The asset check includes validation, which is still in development—currently it only checks folder structure and USD files against the expected naming convention.
+
+When importing a library, the tool creates a temporary stage, references the asset, procedurally sets up a render camera based on its size, adds a light rig, and generates a thumbnail.
+
+If validation fails, there’s an option to adjust the asset folder structure. Editing is fairly basic for now, but I’m planning to extend it.
+
+Current features
 - Asset validation against the expected production pipeline folder structure (basic example; to be extended)
 - Thumbnail rendering
 - Houdini integration with asset import
-- Preview assets in USDView when the application is running in standalone mode.
-- Asset Editing (basic example; to be extended)
+- Asset preview in usdview when running in standalone mode
+- Basic asset editing (to be extended)
 
 All rendering and folder structure configurations are defined in `config.py`.
 
