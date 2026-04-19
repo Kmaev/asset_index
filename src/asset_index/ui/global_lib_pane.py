@@ -13,7 +13,6 @@ class GlobalLib(QtWidgets.QFrame):
 
     def __init__(self, core_index, parent=None):
         super(GlobalLib, self).__init__(parent=parent)
-
         self.import_library_frame = None
         self.core_index = core_index
 
@@ -42,9 +41,9 @@ class GlobalLib(QtWidgets.QFrame):
         self.assets.setIconSize(QtCore.QSize(200, 200))
 
         self.assets.setMovement(QtWidgets.QListView.Static)
-        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-
+        self.assets.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.assets.mousePressEvent = self._list_mouse_press_event
+        self.assets.setObjectName("assets")
 
         self.assets_stack.addWidget(self.assets)
 
@@ -71,13 +70,9 @@ class GlobalLib(QtWidgets.QFrame):
 
         self.libraries.itemSelectionChanged.connect(self.populate_asset_labels)
 
-        self.import_library.clicked.connect(self.on_start_import_clicked)
+        self.import_library.clicked.connect(self.on_start_library_import_clicked)
         self.import_library_frame.update_global_lib.connect(self.on_library_imported)
         self.selected_lib_signal.connect(self.import_library_frame.set_library)
-
-    def get_selection(self, widget: QtWidgets.QListWidget) -> QtWidgets.QListWidgetItem:
-        """Return selected item from widget."""
-        return widget.selectedItems()[0]
 
     def populate_libraries_list(self) -> None:
         """Populate list with imported and available libraries."""
@@ -97,9 +92,16 @@ class GlobalLib(QtWidgets.QFrame):
         metadata = {"imported": imported}
         item.setData(QtCore.Qt.UserRole, metadata)
 
+    def get_selected_library(self) -> str:
+        """
+        Return the selected library name.
+        The library list widget enforces single selection, so index 0 is always valid.
+        """
+        return self.libraries.selectedItems()[0].text()
+
     def populate_asset_labels(self):
         """Update asset view for selected library."""
-        selected = self.get_selection(self.libraries).text()
+        selected = self.get_selected_library()
         selected_catalog = self.core_index.load_library_catalog(selected)
 
         if not selected_catalog:
@@ -118,21 +120,20 @@ class GlobalLib(QtWidgets.QFrame):
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
 
-    def on_start_import_clicked(self):
-        """Switch to import view."""
-        selected = self.get_selection(self.libraries).text()
+    def on_start_library_import_clicked(self):
+        """Emit a signal with the selected library name and switch to the import library view."""
+        selected = self.get_selected_library()
         self.selected_lib_signal.emit(selected)
         self.assets_stack.setCurrentIndex(2)
 
     def on_library_imported(self):
-        """Refresh UI after library import."""
+        """Refresh UI after library import switch stack to asset view."""
         self.populate_asset_labels()
         self.assets_stack.setCurrentIndex(0)
 
     def _list_mouse_press_event(self, event):
         """Clear selection on empty-space click."""
         item = self.assets.itemAt(event.pos())
-
         if item is None:
             self.assets.clearSelection()
             self.assets.setCurrentItem(None)

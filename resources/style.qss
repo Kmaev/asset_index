@@ -13,7 +13,14 @@ QFrame {
     border: none;
 }
 
-QLabel#asset_label_text{
+QFrame[section="true"] {
+    background-color: #252525;
+    border: 1px solid #2E2E2E;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+QLabel#asset_label_text {
     font-size: 10px;
 }
 
@@ -45,6 +52,10 @@ QListWidget::item:selected {
     padding: 1px;
     border-left: 4px solid #FFDD3A;
     padding-left: 3px;
+}
+
+QListWidget#assets::item:hover {
+    background-color: #1C1C1C
 }
 
 QTreeWidget {
@@ -82,14 +93,29 @@ QPushButton {
     border-radius: 6px;
     padding: 6px 10px;
 }
+QPushButton[edit="true"] {
+    background-color: #8B8B8B;
+    color: #1F1F1F;
+    border: none;
+}
 
 QPushButton:hover {
     background-color: #2E2E2E;
 }
 
+QPushButton:hover[edit="true"] {
+    background-color: #C6C6C6;
+    color: #1F1F1F;
+    border: none;
+}
+
 QPushButton:pressed {
     background-color: #181818;
     border: 1px solid #FFDD3A;
+}
+
+QPushButton:pressed[edit="true"] {
+    background-color: #3E3E3E;
 }
 
 QPushButton:disabled {
@@ -105,6 +131,12 @@ QPushButton:disabled:hover {
 QPushButton#asset_button{
     padding: 1px;
 }
+
+QPushButton#asset_button[loaded=true] {
+    background-color: #FFDD3A;
+    color: #1F1F1F;
+}
+
 QSplitter {
     background: transparent;
 }

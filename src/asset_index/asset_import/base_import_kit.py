@@ -24,7 +24,7 @@ class LibraryData:
 
 class BaseKitImporter:
     """
-    Base class for importing KitBash asset libraries into a production pipeline.
+    Base class for importing asset libraries into a production pipeline.
     For each USD asset, creates a temporary render file, computes the asset’s bounding box,
     and uses it to set up and position a render camera. Adds a basic light rig
     and generates a thumbnail using usdrecord.
@@ -76,7 +76,7 @@ class BaseKitImporter:
             self.update_imported_libraries_index(self.library_name)
 
     def create_library_catalog(self) -> LibraryData:
-        """Collect USD asset files from the models directory and return them as a LibraryData instance."""
+        """Collect USD asset files from the models_folder directory and return them as a LibraryData instance."""
         _assets = []
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():

@@ -16,7 +16,7 @@ class LibraryStructureResolver:
         self.structure_config = config.FolderStructure()
 
         self.library_path = self.core_index.global_asset_lib / library
-        self.models = self.library_path / self.structure_config.models_path
+        self.models_folder = self.library_path / self.structure_config.models_path
 
     def run_library_validation(self) -> tuple[bool, bool]:
         """Run folder and asset validation checks."""
@@ -28,12 +28,12 @@ class LibraryStructureResolver:
 
     def validate_folder_structure(self) -> bool:
         """Check required directory structure exists."""
-        return self.models.is_dir()
+        return self.models_folder.is_dir()
 
     def validate_asset_structure(self) -> bool:
         """Check asset folder structure is correct and contains USD file."""
         return any(asset.is_dir() and self._asset_has_valid_usd(asset)
-                   for asset in self.models.iterdir())
+                   for asset in self.models_folder.iterdir())
 
     @staticmethod
     def _asset_has_valid_usd(asset: Path) -> bool:

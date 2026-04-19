@@ -47,6 +47,7 @@ class AssetFrame(QtWidgets.QFrame):
         self.load.setFixedSize(30, 20)
         self.functions_layout.addWidget(self.load)
         self.load.setObjectName("asset_button")
+        self.load.setProperty("loaded", False)
 
         self.label = QtWidgets.QLabel()
 
@@ -62,3 +63,12 @@ class AssetFrame(QtWidgets.QFrame):
     def on_asset_load_clicked(self):
         """Emits assed loaded signal passing the asset path to the main window"""
         self.load_asset_request.emit(self.asset_path)
+        self.switch_import_button_to_loaded()
+
+    def switch_import_button_to_loaded(self):
+        """
+        Update the load button to the 'loaded' state and
+        change its color after the asset is loaded for the first time.
+        """
+        self.load.setProperty("loaded", True)
+        self.load.style().polish(self.load)

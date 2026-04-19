@@ -45,8 +45,8 @@ class AssetIndex(QtWidgets.QMainWindow):
         # Add Import Library Button
         self.import_library = QtWidgets.QPushButton("Import Library")
         self.button_layout.addWidget(self.import_library)
-        self.import_library.clicked.connect(self.global_lib_frame.on_start_import_clicked)
-        self.import_library.clicked.connect(self.global_lib_frame.on_start_import_clicked)
+        self.import_library.clicked.connect(self.global_lib_frame.on_start_library_import_clicked)
+        self.import_library.clicked.connect(self.global_lib_frame.on_start_library_import_clicked)
 
         style_file = Path(__file__).resolve().parents[3] / "resources" / "style.qss"
         style = ""
