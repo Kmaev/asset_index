@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -67,8 +68,17 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.stack.setCurrentIndex(index)
 
     def load_asset(self, asset_path):
-        """Each DCC should implement asset loading functionality according to its requirements."""
-        pass
+        """
+        Load an asset using a DCC-specific implementation.
+
+        Each DCC should define its own loading behavior. In the standalone
+        context, this opens the asset in usdview.
+        """
+        cmd = ["usdview", asset_path]
+        try:
+            subprocess.Popen(cmd)
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Launch failed", f"Failed to open usdview:\n{e}")
 
 
 app_win = None
