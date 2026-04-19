@@ -33,7 +33,8 @@ class ImportLibrary(QtWidgets.QFrame):
         self.splitter.addWidget(self.libraries_view)
         self.libraries_view.setHeaderLabel("Library Content")
         self.libraries_view.setMinimumWidth(100)
-        self.libraries_view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.libraries_view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         self.libraries_view.mousePressEvent = self._tree_mouse_press_event
 
         self.library_data = QtWidgets.QWidget()
@@ -75,17 +76,12 @@ class ImportLibrary(QtWidgets.QFrame):
         self.edit_layout.addWidget(self.create_asset)
         self.create_asset.setProperty("edit", True)
 
-        self.group_with_variants = QtWidgets.QPushButton("Group Variants")
-        self.edit_layout.addWidget(self.group_with_variants)
-        self.group_with_variants.setProperty("edit", True)
-
         self.validation_passed = False
 
         self.validate_lib.clicked.connect(self.on_validate_clicked)
         self.import_lib.clicked.connect(self.on_import_clicked)
 
         self.create_asset.clicked.connect(self.on_create_asset_clicked)
-        self.group_with_variants.clicked.connect(self.on_group_variant_clicked)
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
 
     def set_library(self, library: str):
@@ -177,33 +173,9 @@ class ImportLibrary(QtWidgets.QFrame):
         if errored_files:
             msg = "\n".join(file for file in errored_files)
             self._display_warning_message("Asset Exists",
-                                          f"Please select only USD files that does not structured correctly."
+                                          f"Please select only USD files that are incorrectly structured."
                                           f"\nSkipped:\n{msg}")
 
-        self._reload_libraries_view()
-
-    def on_group_variant_clicked(self):
-        """
-        Group selected USD files into a single asset with variants.
-        Ensures all selected files belong to the same directory before
-        building a variant set.
-        """
-        selected = self.libraries_view.selectedItems()
-        if not selected:
-            self._display_warning_message("Invalid Selection",
-                                          "Please select only USD files from the same folder.")
-            return
-        first_parent = selected[0].parent()
-
-        if not all(item.parent() == first_parent for item in selected):
-            self._display_warning_message("Invalid Selection",
-                                          "Variant USD files must be selected from the same folder.")
-            return
-
-        usd_files = self._get_usd_files_list(selected)
-
-        self._start_editor()
-        self.editor.create_asset_with_variant(usd_files)
         self._reload_libraries_view()
 
     def _get_usd_files_list(self, selected):
