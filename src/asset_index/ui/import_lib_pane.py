@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
-from asset_index.asset_import import qt_import_kit
+from asset_index.asset_import import qt_import_kit, editor
 from asset_index.core import structure_resolver
 
 
@@ -15,6 +15,7 @@ class ImportLibrary(QtWidgets.QFrame):
         super(ImportLibrary, self).__init__(parent=parent)
         self.library_path = None
         self.library = None
+        self.editor = None
         self.core_index = core_index
 
         self.central_layout = QtWidgets.QHBoxLayout()
@@ -40,8 +41,11 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self.library_data_layout = QtWidgets.QVBoxLayout()
         self.library_data.setLayout(self.library_data_layout)
+        self.library_data_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.library_data_layout.addSpacing(10)
 
         self.buttons_group = QtWidgets.QFrame()
+        self.buttons_group.setProperty("section", True)
         self.library_data_layout.addWidget(self.buttons_group)
         self.buttons_group_layout = QtWidgets.QHBoxLayout()
         self.buttons_group_layout.setAlignment(QtCore.Qt.AlignTop)
@@ -54,10 +58,33 @@ class ImportLibrary(QtWidgets.QFrame):
         self.buttons_group_layout.addWidget(self.import_lib)
         self.import_lib.setDisabled(True)
 
+        # Editing Features
+        self.edit_label = QtWidgets.QLabel()
+        self.edit_label.setText("Editing Features")
+        self.edit_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.library_data_layout.addWidget(self.edit_label)
+
+        self.edit_group = QtWidgets.QFrame()
+        self.setProperty("section", True)
+        self.library_data_layout.addWidget(self.edit_group)
+        self.edit_layout = QtWidgets.QHBoxLayout()
+        self.edit_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.edit_group.setLayout(self.edit_layout)
+
+        self.create_asset = QtWidgets.QPushButton("Create Asset")
+        self.edit_layout.addWidget(self.create_asset)
+        self.create_asset.setProperty("edit", True)
+
+        self.group_with_variants = QtWidgets.QPushButton("Group Variants")
+        self.edit_layout.addWidget(self.group_with_variants)
+        self.group_with_variants.setProperty("edit", True)
+
         self.validation_passed = False
 
         self.validate_lib.clicked.connect(self.validate)
         self.import_lib.clicked.connect(self.on_import_clicked)
+        self.create_asset.clicked.connect(self.on_create_asset_clicked)
+        self.group_with_variants.clicked.connect(self.on_group_variant_clicked)
 
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
 
@@ -70,18 +97,26 @@ class ImportLibrary(QtWidgets.QFrame):
                 continue
             item = QtWidgets.QTreeWidgetItem(parent_item)
             item.setText(0, folder.name)
+            if "usd" in folder.suffix and folder.is_file():
+                metadata = {"usd_file": str(folder)}
+                item.setData(0, QtCore.Qt.UserRole, metadata)
             if folder.is_dir():
                 self.populate_libraries_view(folder, item)
+
+    def _reload_libraries_view(self):
+        """Helper method to reload library view"""
+        self.libraries_view.clear()
+        self.populate_libraries_view(self.library_path, self.libraries_view)
 
     def validate(self):
         """Validate selected library folder structure."""
         st = structure_resolver.LibraryStructureResolver(self.core_index, self.library)
         self.validation_passed = all(st.run_library_validation())
         if self.validation_passed:
-            self.display_info_message("Assets are ready for import.")
+            self._display_info_message("Information", "Assets are ready for import.")
             self.import_lib.setDisabled(False)
         else:
-            self.display_info_message("Validation failed. Please fix the asset structure.")
+            self._display_warning_message("Validation failed.", "Validation failed. Please fix the asset structure.")
 
     def trigger_validation(self):
         """Reset validation state on library selection change."""
@@ -121,6 +156,56 @@ class ImportLibrary(QtWidgets.QFrame):
             self.libraries_view.setCurrentItem(None)
         QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
 
-    def display_info_message(self, message):
+    def start_editor(self):
+        if not self.editor:
+            self.editor = editor.AssetEditor(self.core_index, self.library)
+
+    def on_create_asset_clicked(self):
+        """Wrap a spare usd file into folder with the  same name as a usd file"""
+        self.start_editor()
+
+        usd_list = self._get_usd_files_list(self.libraries_view)
+
+        self.editor.create_assets(usd_list)
+
+        self._reload_libraries_view()
+
+    def on_group_variant_clicked(self):
+        self.start_editor()
+
+        selected = self.libraries_view.selectedItems()
+
+        first_parent = selected[0].parent()
+
+        if first_parent is None:
+            self._display_warning_message("Invalid Selection",
+                                          "Please select usd files from the same folder.")
+            return
+
+        if not all(item.parent() == first_parent for item in selected):
+            self._display_warning_message("Invalid Selection",
+                                          "Please select usd files from the same folder.")
+            return
+        usd_files = self._get_usd_files_list(self.libraries_view)
+
+        self.editor.create_asset_with_variant(usd_files)
+
+        self._reload_libraries_view()
+
+    def _get_usd_files_list(self, widget):
+        usd_list = []
+        for item in widget.selectedItems():
+            metadata = item.data(0, QtCore.Qt.UserRole)
+            if not metadata:
+                self._display_warning_message("Invalid Selection", f"{item.text(0)} is not a USD file")
+                continue
+            usd_file = metadata.get("usd_file")
+            usd_list.append(usd_file)
+        return usd_list
+
+    def _display_warning_message(self, title, message):
+        QtWidgets.QMessageBox.warning(self, title, message)
+
+    def _display_info_message(self, title, message):
         """Helper, displays information message."""
-        QtWidgets.QMessageBox.information(self, "Information", message)
+        QtWidgets.QMessageBox.information(self, title, message)

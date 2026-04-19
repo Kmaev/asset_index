@@ -76,7 +76,7 @@ class BaseKitImporter:
             self.update_imported_libraries_index(self.library_name)
 
     def create_library_catalog(self) -> LibraryData:
-        """Collect USD asset files from the models directory and return them as a LibraryData instance."""
+        """Collect USD asset files from the models_folder directory and return them as a LibraryData instance."""
         _assets = []
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
