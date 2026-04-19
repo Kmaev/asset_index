@@ -5,19 +5,15 @@ The goal of this project is to create a tool that works across multiple DCC appl
 Current features include:
 - Asset validation against the expected production pipeline folder structure (basic example; to be extended)
 - Thumbnail rendering
-- Houdini integration with asset import 
+- Houdini integration with asset import
+- Preview assets in USDView when the application is running in standalone mode.
+- Asset Editing (basic example; to be extended)
 
 All rendering and folder structure configurations are defined in `config.py`.
 
 A short demo showcasing the current state of development is included below.
 
-Houdini integration and asset import:
-
-https://github.com/user-attachments/assets/e90ed930-c7ea-46c9-a5cd-7f77b00ddcfd
-
-Asset validation and thumbnail rendering:
-
-https://github.com/user-attachments/assets/644b2e78-a3c7-4ce9-ae70-5e5a851bdd4d
+https://github.com/user-attachments/assets/19722c3f-bac3-4c89-a531-e2a88e262431
 
 ---
 
