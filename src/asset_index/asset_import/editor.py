@@ -1,24 +1,37 @@
+# Copyright (c) 2026 Kristina Maevskaya
+# Asset Browser — portfolio project.
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 from asset_index import config
+from asset_index.core.library_index import LibraryIndex
 
 
 @dataclass
 class EditResult:
-    """Helper class to store editing result data after changing asset structure"""
+    """
+    Helper class to store editing result data after changing asset structure
+
+    Args:
+        success: Whether the asset was modified successfully.
+        asset: Asset path associated with the operation.
+    """
     success: bool
     asset: Path | None = None
 
 
 class AssetEditor:
-    """
-    Asset editor providing basic utilities to organise the library.
-    Current features are minimal and intended to be extended.
-    """
+    """Asset editor providing basic utilities to organise the library."""
 
-    def __init__(self, core, library):
+    def __init__(self, core: LibraryIndex, library: str):
+        """
+        Initialize the editor.
+
+        Args:
+            core: Library index providing access to asset libraries, metadata, and configuration.
+            library: Asset library name for editing.
+        """
         self.core_index = core
         self.library = library
         self.structure_config = config.FolderStructure()
@@ -29,8 +42,16 @@ class AssetEditor:
 
     def wrap_content(self, asset_path, root_folder) -> EditResult:
         """
-        Wrap an asset into a folder named after the asset in case if the selected asset
-        already has correct folder structure skips the asset and returns asset name
+        Wrap an asset into a folder named after the asset.
+
+        If the asset already has the correct folder structure, it is skipped.
+
+        Args:
+            asset_path: Source USD file path.
+            root_folder: Library models root folder where the asset will be moved.
+
+        Returns:
+            EditResult: Result indicating whether the asset was modified and the input asset path.
         """
         asset_path = Path(asset_path)
         wrapper = root_folder / asset_path.stem
@@ -41,7 +62,15 @@ class AssetEditor:
         return EditResult(True, asset_path)
 
     def create_assets(self, usd_files: list) -> list[str]:
-        """Wrap a list of USD files into the library structure. Returns skipped files as a list"""
+        """
+        Wrap a list of USD files into the library structure.
+
+        Args:
+            usd_files: List of USD file to process.
+
+        Returns:
+            List of skipped files.
+        """
         edit_results = [self.wrap_content(file, self.models_folder) for file in usd_files]
         errored_files = [result.asset.name for result in edit_results if not result.success]
         return errored_files

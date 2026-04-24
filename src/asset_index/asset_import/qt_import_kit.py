@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Kristina Maevskaya
+# Asset Browser — portfolio project.
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -10,6 +12,15 @@ class QtKitImporter(base_import_kit.BaseKitImporter):
     """Qt Kit Importer, adds an interruptible progress dialog during asset conversion."""
 
     def iterate_with_progress_bar(self, assets: list[Path]) -> Iterator[Path]:
+        """
+        Report render progress.
+
+        Args:
+            assets: List of USD file paths to process.
+
+        Returns:
+            Iterator: Yields each asset.
+        """
         total = len(assets)
         progress = QtWidgets.QProgressDialog("Generating thumbnails", "Cancel", 0, total)
         progress.setWindowModality(QtCore.Qt.WindowModal)

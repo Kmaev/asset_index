@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Kristina Maevskaya
+# Asset Browser — portfolio project.
 import json
 import logging
 import math
@@ -10,6 +12,7 @@ from pathlib import Path
 from pxr import Usd, UsdGeom, UsdLux, Sdf, Gf
 
 from asset_index import config
+from asset_index.core.library_index import LibraryIndex
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -17,7 +20,13 @@ logger.setLevel(logging.INFO)
 
 @dataclass
 class LibraryData:
-    """Container for library asset data."""
+    """
+    Container for library asset data.
+
+    Args:
+        assets: List of USD file paths to process.
+        extension: Thumbnail file extension (default ".png").
+    """
     assets: list = field(default_factory=list)
     extension: str = ".png"
 
@@ -25,13 +34,21 @@ class LibraryData:
 class BaseKitImporter:
     """
     Base class for importing asset libraries into a production pipeline.
+
     For each USD asset, creates a temporary render file, computes the asset’s bounding box,
     and uses it to set up and position a render camera. Adds a basic light rig
     and generates a thumbnail using usdrecord.
     Updates the library metadata file.
     """
 
-    def __init__(self, core_index, library: str):
+    def __init__(self, core_index: LibraryIndex, library: str):
+        """
+        Initialize the importer.
+
+        Args:
+            core_index: Library index providing access to asset libraries, metadata, and configuration.
+            library: Asset library name.
+        """
         self.core_index = core_index
         self.library_name = library
 
@@ -53,7 +70,16 @@ class BaseKitImporter:
 
     @staticmethod
     def map_existing_library_catalog(library_catalog: dict | None) -> LibraryData:
-        """Map JSON library catalog data to a LibraryData instance."""
+        """
+        Map JSON library catalog data to a LibraryData instance.
+
+        Args:
+            library_catalog: JSON data representing a library catalog,
+                or None if no data is available.
+
+        Returns:
+            LibraryData: Parsed library data with asset paths converted to Path objects.
+        """
         if library_catalog:
             existing_library_data = LibraryData(**library_catalog)
             if existing_library_data.assets:
@@ -63,7 +89,11 @@ class BaseKitImporter:
             return LibraryData()
 
     def import_library(self) -> None:
-        """Run the full import: build the library catalog, render thumbnails, and update global metadata."""
+        """
+        Run the full import process.
+
+        Build the library catalog, render thumbnails, and update global metadata when new assets are detected.
+        """
         library_catalog = self.create_library_catalog()
 
         self.render_thumbnails(library_catalog.assets)
@@ -76,7 +106,15 @@ class BaseKitImporter:
             self.update_imported_libraries_index(self.library_name)
 
     def create_library_catalog(self) -> LibraryData:
-        """Collect USD asset files from the models_folder directory and return them as a LibraryData instance."""
+        """
+        Collect USD asset files from the library root models' folder.
+
+        Only USD files matching the expected naming pattern are included
+        (file name matches the parent folder name).
+
+        Returns:
+            LibraryData: Collected asset data with sorted USD file paths.
+        """
         _assets = []
         if self.models_folder.is_dir():
             for asset_folder in self.models_folder.iterdir():
@@ -88,7 +126,12 @@ class BaseKitImporter:
         return LibraryData(assets=_assets, extension=self.render_config.image.extension)
 
     def render_thumbnails(self, assets: list[Path]) -> None:
-        """Render thumbnails for USD assets by creating a temporary stage."""
+        """
+        Render thumbnails for USD assets by creating a temporary stage.
+
+        Args:
+            assets: List of USD file paths to process.
+        """
         self.completed = False
         self.interrupted = False
         processed = 0
@@ -117,6 +160,12 @@ class BaseKitImporter:
         """
         Report render progress.
         Default implementation logs progress, may be overridden for DCC-specific behavior.
+
+        Args:
+            assets: List of USD file paths to process.
+
+        Returns:
+            Iterator: Yields each asset.
         """
         for asset in assets:
             logging.info(f"Generating thumbnail: {asset}")
@@ -125,13 +174,28 @@ class BaseKitImporter:
 
     @staticmethod
     def get_thumbnail_output_path(usd_file_path: Path, ext: str) -> Path:
-        """Generate the thumbnail path by replacing the USD file extension with the specified extension."""
+        """
+        Generate the thumbnail path by replacing the USD file extension with the specified extension.
+
+        Args:
+            usd_file_path: Source USD file path.
+            ext: Thumbnail file extension (e.g. ".png").
+
+        Returns:
+            Path: Thumbnail output path.
+        """
         return usd_file_path.with_suffix(ext)
 
     def create_temp_usd_render_stage(self, usd_file_path: Path) -> Path:
         """
         Create a temporary USD stage, reference the asset at the "/main" prim,
         attach a light rig and camera, and save for rendering.
+
+        Args:
+            usd_file_path: Source USD file path.
+
+        Returns:
+            Temporary USD stage file path.
         """
         asset_name = usd_file_path.stem
         asset_prim_path = Sdf.Path(f"/main/{asset_name}")
@@ -149,16 +213,32 @@ class BaseKitImporter:
         return temp_usd_stage_file
 
     @staticmethod
-    def reference_library_asset(usd_file_path: str, stage: Usd.Stage, asset_prim_path: Sdf.Path):
-        """Reference the asset at the specified prim path."""
+    def reference_library_asset(usd_file_path: str, stage: Usd.Stage, asset_prim_path: Sdf.Path) -> None:
+        """
+        Reference the asset at the specified prim path.
+
+        Args:
+            usd_file_path: Source USD file path.
+            stage: USD stage to modify.
+            asset_prim_path: Prim path where the asset is referenced.
+        """
         parent_prim = stage.DefinePrim(asset_prim_path)
         stage.SetDefaultPrim(parent_prim)
         references = parent_prim.GetReferences()
         references.AddReference(usd_file_path)
 
     @staticmethod
-    def calculate_bbox_data(stage: Usd.Stage, prim_path: str):
-        """Calculate the bounding box center, size, and maximum dimension for a given primitive."""
+    def calculate_bbox_data(stage: Usd.Stage, prim_path: str) -> tuple[Gf.Vec3d, Gf.Vec3d, float]:
+        """
+        Calculate the bounding box center, size, and maximum dimension for a given primitive.
+
+        Args:
+            stage: USD stage to query.
+            prim_path: Prim path used as the root for the calculation.
+
+        Returns:
+            tuple: Bounding box center, size, and maximum dimension.
+        """
         prim = stage.GetPrimAtPath(prim_path)
         bbox_cache = UsdGeom.BBoxCache(
             Usd.TimeCode.Default(),
@@ -173,8 +253,13 @@ class BaseKitImporter:
         max_dim = max(size)
         return center, size, max_dim
 
-    def add_light_rig(self, stage: Usd.Stage):
-        """Add a basic light rig with a Dome Light."""
+    def add_light_rig(self, stage: Usd.Stage) -> None:
+        """
+        Add a basic light rig with a Dome Light.
+
+        Args:
+            stage: USD stage to modify.
+        """
         _, size, max_dim = self.calculate_bbox_data(stage, "/main")
         exposure = self.render_config.lighting.exposure
         intensity = self.render_config.lighting.intensity
@@ -188,10 +273,13 @@ class BaseKitImporter:
         dome.CreateIntensityAttr().Set(intensity)
         dome.CreateExposureAttr().Set(exposure)
 
-    def add_render_camera(self, stage: Usd.Stage):
+    def add_render_camera(self, stage: Usd.Stage) -> None:
         """
         Create render camera and based on bounding box data calculate render camera position and rotation.
         Set up camera parameters.
+
+        Args:
+            stage: USD stage to modify.
         """
         camera = UsdGeom.Camera.Define(stage, "/Camera")
 
@@ -230,8 +318,17 @@ class BaseKitImporter:
         camera.CreateHorizontalApertureAttr().Set(sensor_width)
         camera.CreateVerticalApertureAttr().Set(sensor_width)
 
-    def render_usd_stage(self, usd_file: str, output_img_path: str, remove_usd_file: bool = True):
-        """Execute render using usdrecord and the Storm renderer. Remove the temporary USD file."""
+    def render_usd_stage(self, usd_file: str, output_img_path: str, remove_usd_file: bool = True) -> None:
+        """
+        Execute render using usdrecord and the Storm renderer.
+
+        Optionally removes the temporary USD file after rendering.
+
+        Args:
+            usd_file: USD stage file to render.
+            output_img_path: Output image path.
+            remove_usd_file: Whether to remove the temporary USD file after rendering.
+        """
         cmd = [
             "usdrecord",
             usd_file,
@@ -248,14 +345,24 @@ class BaseKitImporter:
             if remove_usd_file:
                 Path(usd_file).unlink(missing_ok=True)
 
-    def update_library_index(self, library_catalog: dict):
-        """Update library data catalog"""
+    def update_library_index(self, library_catalog: dict) -> None:
+        """
+        Update library data catalog
+
+        Args:
+            library_catalog: Library data to store.
+        """
         library_catalog_file_path = self.library_path / self.core_index.library_catalog_file_name
         with open(library_catalog_file_path, "w") as f:
             json.dump(library_catalog, f, indent=4)
 
     def update_imported_libraries_index(self, library: str) -> None:
-        """Add a library into an imported library metadata file."""
+        """
+        Add a library to the imported libraries index.
+
+        Args:
+            library: Library name to add.
+        """
         if library not in self.all_imported_libraries:
             self.all_imported_libraries.append(library)
 
