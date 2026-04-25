@@ -29,9 +29,11 @@ class HouAssetLoader:
 
     def _get_display_node(self) -> hou.Node | None:
         """
+        Return the node with the display flag set.
+
         Returns:
-            hou.Node | None: The node with the display flag set, or None if the stage is empty.
-         """
+            hou.Node | None: Display node, or None if the stage is empty.
+        """
         display_node = self.lop_network.displayNode()
         if not display_node:
             return None

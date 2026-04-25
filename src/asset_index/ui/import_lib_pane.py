@@ -213,7 +213,7 @@ class ImportLibrary(QtWidgets.QFrame):
         Display a warning message dialog with the given title and message.
 
         Args:
-        title: Dialog title.
-        message: Message text.
+            title: Dialog title.
+            message: Message text.
         """
         QtWidgets.QMessageBox.warning(self, title, message)

@@ -23,6 +23,7 @@ class HouMainWindow(main_window.AssetIndex):
     def load_asset(self, asset_path) -> None:
         """
         Load a USD asset into Houdini LOP network.
+
         Args:
             asset_path: USD asset file path.
         """
