@@ -10,6 +10,12 @@ class HouMainWindow(main_window.AssetIndex):
     """
 
     def __init__(self, parent):
+        """
+        Initialize the Houdini AssetIndex window.
+
+        Args:
+            parent: Parent widget.
+        """
         super(HouMainWindow, self).__init__(parent=parent)
 
         self.asset_loader = hou_asset_loader.HouAssetLoader()
@@ -27,6 +33,12 @@ app_win = None
 
 
 def show_houdini():
+    """
+    Create and display the AssetIndex window in Houdini.
+
+    Returns:
+        HouMainWindow: The created window instance.
+    """
     import hou
     global app_win
     app_win = HouMainWindow(parent=hou.qt.mainWindow())

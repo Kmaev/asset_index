@@ -1,5 +1,3 @@
-# Copyright (c) 2026 Kristina Maevskaya
-# Asset Browser — portfolio project.
 import shutil
 from dataclasses import dataclass
 from pathlib import Path

@@ -1,5 +1,3 @@
-# Copyright (c) 2026 Kristina Maevskaya
-# Asset Browser — portfolio project.
 from collections.abc import Iterator
 from pathlib import Path
 

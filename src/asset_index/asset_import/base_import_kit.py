@@ -1,5 +1,3 @@
-# Copyright (c) 2026 Kristina Maevskaya
-# Asset Browser — portfolio project.
 import json
 import logging
 import math
