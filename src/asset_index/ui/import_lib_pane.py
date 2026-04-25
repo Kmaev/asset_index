@@ -12,6 +12,13 @@ class ImportLibrary(QtWidgets.QFrame):
     update_global_lib = QtCore.Signal()
 
     def __init__(self, core_index, parent=None):
+        """
+        Initialize the import library widget.
+
+        Args:
+            core_index: Library index providing access to asset libraries, metadata.
+            parent: Parent widget.
+        """
         super(ImportLibrary, self).__init__(parent=parent)
         self.library_path = None
         self.library = None
@@ -85,15 +92,28 @@ class ImportLibrary(QtWidgets.QFrame):
         self.libraries_view.itemSelectionChanged.connect(self.trigger_validation)
 
     def set_library(self, library: str):
-        """Set currently selected library and trigger populate library content view."""
+        """
+        Set the current library and refresh its contents in the view.
+
+        Args:
+            library: Library name.
+        """
         self.libraries_view.clear()
         self.library = library
         self.library_path = self.core_index.global_asset_lib / self.library
         self.populate_libraries_view(self.library_path, self.libraries_view)
         self.trigger_validation()
 
-    def populate_libraries_view(self, root: Path, parent_item):
-        """Populate tree view with library content."""
+    def populate_libraries_view(self, root: Path, parent_item) -> None:
+        """
+        Populate the tree view with library content.
+
+        Recursively adds folders and USD files under the given root.
+
+        Args:
+            root: Root directory to traverse.
+            parent_item: Parent tree widget item.
+        """
         folders = sorted((p for p in root.iterdir() if not p.name.startswith(".")),
                          key=lambda p: p.name.lower())
         for folder in folders:
@@ -109,17 +129,17 @@ class ImportLibrary(QtWidgets.QFrame):
             if folder.is_dir():
                 self.populate_libraries_view(folder, item)
 
-    def _reload_libraries_view(self):
+    def _reload_libraries_view(self) -> None:
         """Helper to reload the libraries view."""
         self.libraries_view.clear()
         self.populate_libraries_view(self.library_path, self.libraries_view)
 
-    def trigger_validation(self):
+    def trigger_validation(self) -> None:
         """Reset validation state on library selection change."""
         self.import_lib.setDisabled(True)
         self.validation_passed = False
 
-    def on_validate_clicked(self):
+    def on_validate_clicked(self) -> None:
         """Validate selected library folder structure."""
         st = structure_resolver.LibraryStructureResolver(self.core_index, self.library)
         self.validation_passed = all(st.run_library_validation())
@@ -129,11 +149,11 @@ class ImportLibrary(QtWidgets.QFrame):
         else:
             self._display_warning_message("Validation failed.", "Validation failed. Please fix the asset structure.")
 
-    def enable_import_button(self):
+    def enable_import_button(self) -> None:
         """Enable import action."""
         self.import_lib.setDisabled(False)
 
-    def on_import_clicked(self):
+    def on_import_clicked(self) -> None:
         """Run library import process."""
         import_lib = qt_import_kit.QtKitImporter(self.core_index, str(self.library))
         import_lib.import_library()
@@ -145,7 +165,7 @@ class ImportLibrary(QtWidgets.QFrame):
         self.update_global_lib.emit()
         self.libraries_view.clear()
 
-    def _tree_mouse_press_event(self, event):
+    def _tree_mouse_press_event(self, event: QtGui.QMouseEvent) -> None:
         """Clear selection on empty-space click."""
         item = self.libraries_view.itemAt(event.pos())
 
@@ -154,11 +174,12 @@ class ImportLibrary(QtWidgets.QFrame):
             self.libraries_view.setCurrentItem(None)
         QtWidgets.QTreeWidget.mousePressEvent(self.libraries_view, event)
 
-    def _start_editor(self):
+    def _start_editor(self) -> None:
+        """Initialize the asset editor if it is not already created."""
         if not self.editor:
             self.editor = editor.AssetEditor(self.core_index, self.library)
 
-    def on_create_asset_clicked(self):
+    def on_create_asset_clicked(self) -> None:
         """Wrap selected USD files into folders named after each file."""
         selected = self.libraries_view.selectedItems()
         if not selected:
@@ -178,7 +199,7 @@ class ImportLibrary(QtWidgets.QFrame):
 
         self._reload_libraries_view()
 
-    def _get_usd_files_list(self, selected):
+    def _get_usd_files_list(self, selected: list[QtWidgets.QTreeWidgetItem]) -> list[str]:
         """Return a list of USD file paths extracted from the selected items' metadata."""
         usd_list = []
         for item in selected:
@@ -187,6 +208,12 @@ class ImportLibrary(QtWidgets.QFrame):
             usd_list.append(usd_file)
         return usd_list
 
-    def _display_warning_message(self, title, message):
-        """Display a warning message dialog with the given title and message."""
+    def _display_warning_message(self, title: str, message: str) -> None:
+        """
+        Display a warning message dialog with the given title and message.
+
+        Args:
+            title: Dialog title.
+            message: Message text.
+        """
         QtWidgets.QMessageBox.warning(self, title, message)

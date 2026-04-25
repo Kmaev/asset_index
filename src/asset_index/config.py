@@ -16,6 +16,7 @@ class FolderStructure:
 
 @dataclass
 class CameraSettings:
+    """Camera parameters used for thumbnail rendering."""
     focal_length: float = 50.0
     sensor_width: float = 36.0
     azimuth: float = 45
@@ -25,6 +26,7 @@ class CameraSettings:
 
 @dataclass
 class LightingSettings:
+    """Lighting configuration for thumbnail rendering."""
     hdr: Path = Path(__file__).resolve().parents[2] / "resources" / "belfast_farmhouse_2k.hdr"
     intensity: float = 0.85
     # Final exposure is adjusted based on asset scale.
@@ -49,6 +51,7 @@ class ImageSettings:
 
 @dataclass
 class RenderConfig:
+    """Container for render configuration settings."""
     lighting: LightingSettings = field(default_factory=LightingSettings)
     camera: CameraSettings = field(default_factory=CameraSettings)
     image: ImageSettings = field(default_factory=ImageSettings)

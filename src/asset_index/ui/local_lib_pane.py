@@ -5,18 +5,31 @@ class LocalLib(QtWidgets.QFrame):
     """Placeholder UI for local library (not implemented)."""
 
     def __init__(self, core_index, parent=None):
+        """
+        Initialize the local library placeholder UI.
+
+        Args:
+            core_index: Library index providing access to asset libraries, metadata.
+            parent: Parent widget.
+        """
         super(LocalLib, self).__init__(parent=parent)
         self.core_index = core_index
         self.central_layout = QtWidgets.QVBoxLayout()
         self.central_layout.setAlignment(QtCore.Qt.AlignCenter)
         self.setLayout(self.central_layout)
 
-        message = "Turn back. You’ve reached the world’s edge. None but devils play past here."
+        message = "This feature is not implemented yet. \nPlanned support for project-specific assets."
 
         self.add_message("Not Implemented")
         self.add_message(message)
 
     def add_message(self, message):
+        """
+        Add a centered, read-only message to the layout.
+
+        Args:
+            message: Text to display.
+        """
         not_implemented = QtWidgets.QLineEdit()
         not_implemented.setEnabled(False)
         not_implemented.setText(message)

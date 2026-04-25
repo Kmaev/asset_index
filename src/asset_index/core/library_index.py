@@ -15,22 +15,40 @@ class LibraryIndex:
 
     @staticmethod
     def get_env_var(env_var: str) -> str:
-        """Return the value of the given environment variable."""
+        """
+        Helper function to get an environment variable value.
+
+        Returns:
+            str: Environment variable value.
+
+        Raises:
+            EnvironmentError: If the environment variable is not found.
+        """
         try:
             return os.environ[env_var]
         except KeyError:
             raise EnvironmentError(f"Environment variable '{env_var}' not found.")
 
     def list_all_libraries(self) -> list:
-        """Return all library folder names. Searches the file system."""
+        """
+        Return all library folder names. Searches the file system.
+
+        Returns:
+            List of all available libraries in the root folder.
+        """
         if self._all_libraries is None:
             self._all_libraries = sorted([folder.name for folder in self.global_asset_lib.iterdir() if
                                           folder.is_dir()])
 
         return self._all_libraries
 
-    def list_imported_libraries(self) -> list | None:
-        """Return libraries registered in the global metadata file."""
+    def list_imported_libraries(self) -> list[str]:
+        """
+        Return libraries registered in the global metadata file.
+
+        Returns:
+            List of imported library names.
+        """
         if not self.all_libraries_data_file.is_file():
             return []
         with open(self.all_libraries_data_file, "r") as f:
@@ -38,15 +56,30 @@ class LibraryIndex:
         imported_libraries = sorted(libraries_list)
         return imported_libraries
 
-    def list_unimported_libraries(self) -> list:
-        """Return libraries that have not yet been imported."""
+    def list_unimported_libraries(self) -> list[str]:
+        """
+        Return libraries that are present on disk but not yet imported.
+
+        Compares all library folders with the metadata of imported libraries.
+
+        Returns:
+            list: Names of unimported libraries.
+        """
         imported_libraries = self.list_imported_libraries()
         all_libraries = self.list_all_libraries()
         not_imported_libraries = [lib for lib in all_libraries if lib not in imported_libraries]
         return not_imported_libraries
 
     def load_library_catalog(self, library) -> Any | None:
-        """Load catalog data for a given library."""
+        """
+        Load catalog data for a given library.
+
+        Args:
+            library: Library name.
+
+        Returns:
+            Any | None: Loaded JSON data, or None if the catalog file is not found.
+        """
         current_lib_path = self.global_asset_lib / library / self.library_catalog_file_name
         if not current_lib_path.is_file():
             return None

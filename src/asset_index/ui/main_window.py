@@ -11,6 +11,12 @@ class AssetIndex(QtWidgets.QMainWindow):
     """Main window for asset library UI."""
 
     def __init__(self, parent=None):
+        """
+        Initialize Asset Index Main Window.
+
+        Args:
+            parent: Parent widget.
+        """
         super(AssetIndex, self).__init__(parent=parent)
         self.core_index = library_index.LibraryIndex()
 
@@ -47,7 +53,6 @@ class AssetIndex(QtWidgets.QMainWindow):
         self.import_library = QtWidgets.QPushButton("Import Library")
         self.button_layout.addWidget(self.import_library)
         self.import_library.clicked.connect(self.global_lib_frame.on_start_library_import_clicked)
-        self.import_library.clicked.connect(self.global_lib_frame.on_start_library_import_clicked)
 
         style_file = Path(__file__).resolve().parents[3] / "resources" / "style.qss"
         style = ""
@@ -60,19 +65,22 @@ class AssetIndex(QtWidgets.QMainWindow):
         if self.parent():
             self.parent().setStyleSheet(self.parent().styleSheet())
 
-    def on_button_clicked(self):
+    def on_button_clicked(self) -> None:
         """Switch stacked view based on clicked button."""
         button = self.sender()
 
         index = button.property('stack-index')
         self.stack.setCurrentIndex(index)
 
-    def load_asset(self, asset_path):
+    def load_asset(self, asset_path: str) -> None:
         """
         Load an asset using a DCC-specific implementation.
 
         Each DCC should define its own loading behavior. In the standalone
         context, this opens the asset in usdview.
+
+        Args:
+            asset_path: USD file to load
         """
         cmd = ["usdview", asset_path]
         try:
@@ -85,6 +93,15 @@ app_win = None
 
 
 def show(parent=None):
+    """
+    Create and display the AssetIndex window.
+
+    Args:
+        parent: Parent widget.
+
+    Returns:
+        AssetIndex: The created window instance.
+    """
     global app_win
     app_win = AssetIndex(parent=parent)
     app_win.show()

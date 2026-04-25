@@ -12,6 +12,13 @@ class GlobalLib(QtWidgets.QFrame):
     load_asset_request = QtCore.Signal(object)
 
     def __init__(self, core_index, parent=None):
+        """
+        Initialize the global library widget.
+
+        Args:
+            core_index: Library index providing access to asset libraries, metadata.
+            parent: Parent widget.
+        """
         super(GlobalLib, self).__init__(parent=parent)
         self.import_library_frame = None
         self.core_index = core_index
@@ -85,21 +92,25 @@ class GlobalLib(QtWidgets.QFrame):
             if lib not in imported_libraries:
                 self._add_library_item(lib, self.libraries, imported=False)
 
-    def _add_library_item(self, name, parent, imported=True) -> None:
-        """Add library item with metadata."""
+    def _add_library_item(self, name: str, parent: QtWidgets.QListWidget, imported=True) -> None:
+        """
+        Add a library item with metadata.
+
+        Args:
+            name: Library item name.
+            parent: Parent QListWidget.
+            imported: Whether the library is imported.
+        """
         item = QtWidgets.QListWidgetItem(parent)
         item.setText(name)
         metadata = {"imported": imported}
         item.setData(QtCore.Qt.UserRole, metadata)
 
     def get_selected_library(self) -> str:
-        """
-        Return the selected library name.
-        The library list widget enforces single selection, so index 0 is always valid.
-        """
+        """Return the selected library name."""
         return self.libraries.selectedItems()[0].text()
 
-    def populate_asset_labels(self):
+    def populate_asset_labels(self) -> None:
         """Update asset view for selected library."""
         selected = self.get_selected_library()
         selected_catalog = self.core_index.load_library_catalog(selected)
@@ -120,19 +131,19 @@ class GlobalLib(QtWidgets.QFrame):
             self.assets.addItem(item)
             self.assets.setItemWidget(item, widget)
 
-    def on_start_library_import_clicked(self):
+    def on_start_library_import_clicked(self) -> None:
         """Emit a signal with the selected library name and switch to the import library view."""
         selected = self.get_selected_library()
         self.selected_lib_signal.emit(selected)
         self.assets_stack.setCurrentIndex(2)
 
-    def on_library_imported(self):
+    def on_library_imported(self) -> None:
         """Refresh UI after library import switch stack to asset view."""
         self.populate_asset_labels()
         self.assets_stack.setCurrentIndex(0)
 
-    def _list_mouse_press_event(self, event):
-        """Clear selection on empty-space click."""
+    def _list_mouse_press_event(self, event: QtGui.QMouseEvent) -> None:
+        """Clear selection when clicking empty space."""
         item = self.assets.itemAt(event.pos())
         if item is None:
             self.assets.clearSelection()

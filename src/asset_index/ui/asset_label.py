@@ -7,6 +7,14 @@ class AssetFrame(QtWidgets.QFrame):
     load_asset_request = QtCore.Signal(object)
 
     def __init__(self, asset_path, ext, parent=None):
+        """
+        Initialize the asset frame.
+
+        Args:
+            asset_path: USD file path.
+            ext: Thumbnail file extension.
+            parent: Parent widget.
+        """
         super(AssetFrame, self).__init__(parent=parent)
         self.asset_path = asset_path
         self.extension = ext
@@ -60,12 +68,12 @@ class AssetFrame(QtWidgets.QFrame):
 
         self.load.clicked.connect(self.on_asset_load_clicked)
 
-    def on_asset_load_clicked(self):
+    def on_asset_load_clicked(self) -> None:
         """Emits assed loaded signal passing the asset path to the main window"""
         self.load_asset_request.emit(self.asset_path)
         self.switch_import_button_to_loaded()
 
-    def switch_import_button_to_loaded(self):
+    def switch_import_button_to_loaded(self) -> None:
         """
         Update the load button to the 'loaded' state and
         change its color after the asset is loaded for the first time.
